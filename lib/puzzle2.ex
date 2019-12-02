@@ -22,6 +22,10 @@ defmodule Puzzle2 do
     |> run_intcode()
   end
 
+  @doc """
+  Iterates over the first two inputs of the opcode to find which combination yeilds the given
+  output
+  """
   @spec find_output(integer()) :: {integer(), integer()} | :not_found
   def find_output(output \\ 19690720) do
     input = read_file("test/support/puzzle2/input.txt")
@@ -36,6 +40,9 @@ defmodule Puzzle2 do
     end)
   end
 
+  @doc """
+  Runs the intcode in `input` replacing the inputs at position 1 and 2 with a and b
+  """
   @spec test_input(intcode(), integer(), integer()) :: execution()
   def test_input(input, a, b) do
     input
@@ -44,6 +51,9 @@ defmodule Puzzle2 do
     |> run_intcode()
   end
 
+  @doc """
+  Loads the intcode in `path`
+  """
   @spec read_file(Path.t()) :: intcode()
   def read_file(path) do
     path
