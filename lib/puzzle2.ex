@@ -71,19 +71,19 @@ defmodule Puzzle2 do
     run_intcode(input, 0)
   end
 
-  defp run_intcode(input, index) do
-    case Enum.at(input, index) do
+  defp run_intcode(input, address) do
+    case Enum.at(input, address) do
       99 ->
         input
 
-      op when op in @valid_ops ->
-        [op, a, b, target] = Enum.slice(input, index, 4)
+      opcode when opcode in @valid_ops ->
+        [^opcode, a, b, target] = Enum.slice(input, address, 4)
         a = Enum.at(input, a)
         b = Enum.at(input, b)
 
         input
-        |> List.replace_at(target, op(op).(a, b))
-        |> run_intcode(index + 4)
+        |> List.replace_at(target, op(opcode).(a, b))
+        |> run_intcode(address + 4)
 
       other ->
         Logger.error("unexpected opcode: #{other}")
