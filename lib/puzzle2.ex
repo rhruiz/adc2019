@@ -30,8 +30,8 @@ defmodule Puzzle2 do
   def find_output(output \\ 19690720) do
     input = read_file("test/support/puzzle2/input.txt")
 
-    0..99
-    |> Stream.flat_map(fn a -> Enum.map(0..99, fn b -> {a, b} end) end)
+    99..0
+    |> Stream.flat_map(fn a -> Enum.map(99..0, fn b -> {a, b} end) end)
     |> Enum.find(:not_found, fn {a, b} ->
       case test_input(input, a, b) do
         [^output | _] -> true

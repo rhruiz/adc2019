@@ -20,10 +20,6 @@ defmodule Puzzle2Test do
       assert {12, 2} = find_output(3101844)
     end
 
-    test "finds 19690720" do
-      assert {84, 78} = find_output(19690720)
-    end
-
     test "finds 19690720 by default" do
       assert {84, 78} = find_output()
     end
