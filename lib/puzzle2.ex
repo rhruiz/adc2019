@@ -28,16 +28,22 @@ defmodule Puzzle2 do
   """
   @spec find_output(integer()) :: {integer(), integer()} | :not_found
   def find_output(output \\ 19690720) do
-    input = read_file("test/support/puzzle2/input.txt")
+    "test/support/puzzle2/input.txt"
+    |> read_file()
+    |> find_output(output, 0)
+  end
 
-    99..0
-    |> Stream.flat_map(fn a -> Enum.map(99..0, fn b -> {a, b} end) end)
-    |> Enum.find(:not_found, fn {a, b} ->
-      case test_input(input, a, b) do
-        [^output | _] -> true
-        _ -> false
-      end
-    end)
+  defp find_output(_, _, 10_000) do
+    :not_found
+  end
+
+  defp find_output(input, output, n) do
+    {a, b} = {div(n, 100), rem(n, 100)}
+
+    case test_input(input, a, b) do
+      [^output | _] -> {a, b}
+      _ -> find_output(input, output, n + 1)
+    end
   end
 
   @doc """
