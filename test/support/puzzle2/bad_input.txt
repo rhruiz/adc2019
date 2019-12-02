@@ -1,0 +1,3 @@
+MOV EAX, [EBX]
+MOV [ESI+EAX], CL
+MOV DS, DX
