@@ -44,11 +44,8 @@ defmodule Puzzle2 do
   Runs the intcode in `input` replacing the inputs at position 1 and 2 with a and b
   """
   @spec test_input(intcode(), integer(), integer()) :: execution()
-  def test_input(input, a, b) do
-    input
-    |> List.replace_at(1, a)
-    |> List.replace_at(2, b)
-    |> run_intcode()
+  def test_input([head, _, _ | tail], a, b) do
+    run_intcode([head, a, b | tail])
   end
 
   @doc """
