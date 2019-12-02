@@ -3,6 +3,11 @@ defmodule Puzzle2 do
   This module implements the intcode program for puzzle day 2
   """
 
+  require Logger
+
+  @type intcode :: [integer()]
+  @type execution :: intcode | :halt_and_catch_fire
+
   @valid_ops [1, 2]
 
   @doc """
@@ -10,20 +15,48 @@ defmodule Puzzle2 do
 
   Crashes on invalid input
   """
-  @spec from_input(Path.t()) :: [integer()]
+  @spec from_input(Path.t()) :: intcode()
   def from_input(path) do
+    path
+    |> read_file()
+    |> run_intcode()
+  end
+
+  @spec find_output(integer()) :: {integer(), integer()} | :not_found
+  def find_output(output \\ 19690720) do
+    input = read_file("test/support/puzzle2/input.txt")
+
+    0..99
+    |> Stream.flat_map(fn a -> Enum.map(0..99, fn b -> {a, b} end) end)
+    |> Enum.find(:not_found, fn {a, b} ->
+      case test_input(input, a, b) do
+        [^output | _] -> true
+        _ -> false
+      end
+    end)
+  end
+
+  @spec test_input(intcode(), integer(), integer()) :: execution()
+  def test_input(input, a, b) do
+    input
+    |> List.replace_at(1, a)
+    |> List.replace_at(2, b)
+    |> run_intcode()
+  end
+
+  @spec read_file(Path.t()) :: intcode()
+  def read_file(path) do
     path
     |> File.read!()
     |> String.split(",")
     |> Enum.map(&String.trim/1)
     |> Enum.map(&String.to_integer/1)
-    |> run_intcode()
   end
 
   @doc """
   Runs the intcode program described by `input`
   """
-  @spec run_intcode([integer()]) :: [integer()]
+  @spec run_intcode(intcode()) :: execution()
   def run_intcode(input) do
     run_intcode(input, 0)
   end
@@ -43,7 +76,7 @@ defmodule Puzzle2 do
         |> run_intcode(index + 4)
 
       other ->
-        IO.inspect(other, label: "unexpected opcode")
+        Logger.error("unexpected opcode: #{other}")
         :halt_and_catch_fire
     end
   end

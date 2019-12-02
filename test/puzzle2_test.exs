@@ -15,7 +15,33 @@ defmodule Puzzle2Test do
     end
   end
 
+  describe "find_output/1" do
+    test "find_output(3101844) return {12, 2}" do
+      assert {12, 2} = find_output(3101844)
+    end
+
+    test "finds 19690720" do
+      assert {84, 78} = find_output(19690720)
+    end
+
+    test "finds 19690720 by default" do
+      assert {84, 78} = find_output()
+    end
+  end
+
+  describe "test_input/3" do
+    test "test_input(input, 12, 2) returns 3101844" do
+      input = read_file("test/support/puzzle2/altered_input.txt")
+
+      assert [3101844 | _] = test_input(input, 12, 2)
+    end
+  end
+
   describe "run_intcode/1" do
+    test "halts and catches fire on invalid opcode" do
+      assert :halt_and_catch_fire = run_intcode([98])
+    end
+
     test "1,0,0,0,99 becomes 2,0,0,0,99 (1 + 1 = 2)" do
       assert [2, 0, 0, 0, 99] == run_intcode([1, 0, 0, 0, 99])
     end
