@@ -27,7 +27,7 @@ defmodule Puzzle2 do
   output
   """
   @spec find_output(integer()) :: {integer(), integer()} | :not_found
-  def find_output(output \\ 19690720) do
+  def find_output(output \\ 19_690_720) do
     "test/support/puzzle2/input.txt"
     |> read_file()
     |> find_output(output, 0)

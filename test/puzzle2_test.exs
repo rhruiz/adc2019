@@ -17,7 +17,7 @@ defmodule Puzzle2Test do
 
   describe "find_output/1" do
     test "find_output(3101844) return {12, 2}" do
-      assert {12, 2} = find_output(3101844)
+      assert {12, 2} = find_output(3_101_844)
     end
 
     test "finds 19690720 by default" do
@@ -29,7 +29,7 @@ defmodule Puzzle2Test do
     test "test_input(input, 12, 2) returns 3101844" do
       input = read_file("test/support/puzzle2/altered_input.txt")
 
-      assert [3101844 | _] = test_input(input, 12, 2)
+      assert [3_101_844 | _] = test_input(input, 12, 2)
     end
   end
 
