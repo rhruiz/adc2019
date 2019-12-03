@@ -3,19 +3,19 @@ defmodule Puzzle3 do
   Day 3 puzzle. Messed up wires.
   """
 
-  @type point :: {x :: integer(), y :: integer(), distance :: non_neg_integer()}
-
   @doc """
-  Reads a file with one integer per line representing each module mass
+  Reads a file path for both wires
 
   Crashes on invalid input
   """
-  def from_input(path) do
+  def from_input(path, mode \\ :shortest_cross) do
     path
     |> File.stream!()
     |> Stream.map(&file_line_to_points/1)
     |> Enum.into([])
-    |> shortest_cross()
+    |> (fn paths ->
+      apply(__MODULE__, mode, [paths])
+    end).()
   end
 
   def file_line_to_points(line) do
@@ -28,19 +28,34 @@ defmodule Puzzle3 do
 
   def shortest_cross([first_points, second_points]) do
     first_points
-    |> Enum.filter(fn point ->
-      MapSet.member?(second_points, point)
+    |> Enum.filter(fn {point, _distance} ->
+      Map.has_key?(second_points, point)
     end)
     |> Enum.sort_by(&distance_to_center/1)
     |> hd()
     |> distance_to_center()
   end
 
-  def distance_to_center({x, y}), do: abs(x) + abs(y)
+  def shortest_time([first_points, second_points]) do
+    first_points
+    |> Enum.reduce([], fn {point, steps}, acc ->
+      if Map.has_key?(second_points, point) do
+        [{steps, second_points[point]} | acc]
+      else
+        acc
+      end
+    end)
+    |> Enum.sort_by(&signal_speed/1)
+    |> hd()
+    |> signal_speed()
+  end
+
+  def distance_to_center({{x, y}, _}), do: abs(x) + abs(y)
+  def signal_speed({signal1, signal2}), do: signal1 + signal2
 
   def path_to_points(path) do
     path
-    |> Enum.reduce({{0, 0}, MapSet.new}, fn movement, {position, pointmap} ->
+    |> Enum.reduce({{{0, 0}, 0}, Map.new}, fn movement, {position, pointmap} ->
       apply_movement(position, movement, pointmap)
     end)
     |> elem(1)
@@ -50,9 +65,10 @@ defmodule Puzzle3 do
     {position, pointmap}
   end
 
-  def apply_movement({x, y}, {dx, dy, distance}, pointmap) do
+  def apply_movement({{x, y}, steps}, {dx, dy, distance}, pointmap) do
     new_position = {x + dx, y + dy}
-    apply_movement(new_position, {dx, dy, distance - 1}, MapSet.put(pointmap, new_position))
+    steps = steps + 1
+    apply_movement({new_position, steps}, {dx, dy, distance - 1}, Map.put_new(pointmap, new_position, steps))
   end
 
   def to_movement(<< h :: binary-size(1), distance :: binary >>) do
