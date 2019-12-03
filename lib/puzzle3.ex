@@ -62,24 +62,21 @@ defmodule Puzzle3 do
   @spec path_to_points(point(), [movement()]) :: [point()]
   def path_to_points(origin \\ {0, 0}, path) do
     path
-    |> Enum.reduce({{origin, 0}, Map.new()}, fn movement, {position, pointmap} ->
-      apply_movement(position, movement, pointmap)
-    end)
-    |> elem(1)
+    |> Enum.reduce({origin, 0, Map.new()}, &apply_movement/2)
+    |> elem(2)
   end
 
-  defp apply_movement(state, {_, _, 0}, pointmap) do
-    {state, pointmap}
+  defp apply_movement({_, _, 0}, state) do
+    state
   end
 
-  defp apply_movement({{x, y}, steps}, {dx, dy, distance}, pointmap) do
+  defp apply_movement({dx, dy, distance}, {{x, y}, steps, pointmap}) do
     new_position = {x + dx, y + dy}
     steps = steps + 1
 
     apply_movement(
-      {new_position, steps},
       {dx, dy, distance - 1},
-      Map.put_new(pointmap, new_position, steps)
+      {new_position, steps, Map.put_new(pointmap, new_position, steps)}
     )
   end
 
