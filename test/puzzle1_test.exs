@@ -4,6 +4,10 @@ defmodule Puzzle1Test do
   import Puzzle1
 
   describe "from_input/1" do
+    test "computes fuel for modules" do
+      assert 4892166 = from_input("test/support/puzzle1/input.txt")
+    end
+
     test "reads module masses from file" do
       assert 2 + 2 + 966 + 50346 ==
                from_input("test/support/puzzle1/fuel.txt")
