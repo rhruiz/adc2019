@@ -18,9 +18,7 @@ defmodule Puzzle3 do
     |> File.stream!()
     |> Stream.map(&file_line_to_points/1)
     |> Enum.into([])
-    |> (fn paths ->
-          apply(__MODULE__, mode, [paths])
-        end).()
+    |> (fn paths -> apply(__MODULE__, mode, [paths]) end).()
   end
 
   @spec file_line_to_points(String.t()) :: [point()]
