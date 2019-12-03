@@ -3,21 +3,27 @@ defmodule Puzzle3 do
   Day 3 puzzle. Messed up wires.
   """
 
+  @type point :: {x :: integer(), y :: integer()}
+  @type ortho :: -1 | 0 | 1
+  @type movement :: {x :: ortho, y :: ortho, distance :: integer()}
+
   @doc """
   Reads a file path for both wires
 
   Crashes on invalid input
   """
+  @spec from_input(Path.t(), atom()) :: non_neg_integer()
   def from_input(path, mode \\ :shortest_cross) do
     path
     |> File.stream!()
     |> Stream.map(&file_line_to_points/1)
     |> Enum.into([])
     |> (fn paths ->
-      apply(__MODULE__, mode, [paths])
-    end).()
+          apply(__MODULE__, mode, [paths])
+        end).()
   end
 
+  @spec file_line_to_points(String.t()) :: [point()]
   def file_line_to_points(line) do
     line
     |> String.split(",")
@@ -26,6 +32,7 @@ defmodule Puzzle3 do
     |> path_to_points()
   end
 
+  @spec shortest_cross([[point()]]) :: non_neg_integer()
   def shortest_cross([first_points, second_points]) do
     first_points
     |> Enum.filter(fn {point, _distance} ->
@@ -36,6 +43,7 @@ defmodule Puzzle3 do
     |> distance_to_center()
   end
 
+  @spec shortest_time([[point()]]) :: non_neg_integer()
   def shortest_time([first_points, second_points]) do
     first_points
     |> Enum.reduce([], fn {point, steps}, acc ->
@@ -50,28 +58,35 @@ defmodule Puzzle3 do
     |> signal_speed()
   end
 
-  def distance_to_center({{x, y}, _}), do: abs(x) + abs(y)
-  def signal_speed({signal1, signal2}), do: signal1 + signal2
+  defp distance_to_center({{x, y}, _}), do: abs(x) + abs(y)
+  defp signal_speed({signal1, signal2}), do: signal1 + signal2
 
-  def path_to_points(path) do
+  @spec path_to_points(point(), [movement()]) :: [point()]
+  def path_to_points(origin \\ {0, 0}, path) do
     path
-    |> Enum.reduce({{{0, 0}, 0}, Map.new}, fn movement, {position, pointmap} ->
+    |> Enum.reduce({{origin, 0}, Map.new()}, fn movement, {position, pointmap} ->
       apply_movement(position, movement, pointmap)
     end)
     |> elem(1)
   end
 
-  def apply_movement(position, {_, _, 0}, pointmap) do
-    {position, pointmap}
+  defp apply_movement(state, {_, _, 0}, pointmap) do
+    {state, pointmap}
   end
 
-  def apply_movement({{x, y}, steps}, {dx, dy, distance}, pointmap) do
+  defp apply_movement({{x, y}, steps}, {dx, dy, distance}, pointmap) do
     new_position = {x + dx, y + dy}
     steps = steps + 1
-    apply_movement({new_position, steps}, {dx, dy, distance - 1}, Map.put_new(pointmap, new_position, steps))
+
+    apply_movement(
+      {new_position, steps},
+      {dx, dy, distance - 1},
+      Map.put_new(pointmap, new_position, steps)
+    )
   end
 
-  def to_movement(<< h :: binary-size(1), distance :: binary >>) do
+  @spec to_movement(String.t()) :: movement()
+  def to_movement(<<h::binary-size(1), distance::binary>>) do
     to_movement(direction(h), String.to_integer(distance))
   end
 
