@@ -46,12 +46,7 @@ defmodule Puzzle4 do
   @spec has_equal_adjacent_digits?(digits()) :: boolean()
   def has_equal_adjacent_digits?(digits) do
     digits
-    |> Enum.reduce({false, nil}, fn
-      _, {true, n} -> {true, n}
-      n, {_, nil} -> {false, n}
-      n, {_, n} -> {true, n}
-      m, {_, _} -> {false, m}
-    end)
-    |> elem(0)
+    |> Enum.chunk_by(fn digit -> digit end)
+    |> Enum.any?(fn chunk -> length(chunk) == 2 end)
   end
 end

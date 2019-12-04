@@ -6,13 +6,17 @@ defmodule Puzzle4Test do
 
   describe "possible_passwords/2" do
     test "returns the number of passwords in the range" do
-      assert 454 = possible_passwords()
+      n = possible_passwords()
+      assert n > 214
+      assert n < 302
+
+      assert 288 = n
     end
   end
 
   describe "is_valid_password?/1" do
     test "matches requirement 1" do
-      assert is_valid_password?(111111)
+      assert is_valid_password?(112233)
     end
 
     test "matches requirement 2" do
@@ -21,6 +25,14 @@ defmodule Puzzle4Test do
 
     test "matches requirement 3" do
       refute is_valid_password?(123789)
+    end
+
+    test "matches part 2 requirement 2" do
+      refute is_valid_password?(123444)
+    end
+
+    test "matches part 2 requirement 3" do
+      assert is_valid_password?(111122)
     end
   end
 
@@ -31,6 +43,17 @@ defmodule Puzzle4Test do
 
     test "returns false when there are no equal adjacent digits" do
       refute has_equal_adjacent_digits?(digits(1373))
+    end
+
+    test "returns true when there are adjacent equal digits outside of a cluster" do
+      assert has_equal_adjacent_digits?(digits(112222))
+      assert has_equal_adjacent_digits?(digits(222211))
+      assert has_equal_adjacent_digits?(digits(221122))
+      assert has_equal_adjacent_digits?(digits(221333))
+    end
+
+    test "returns false when matching digits are part of a larger group" do
+      refute has_equal_adjacent_digits?(digits(111234))
     end
   end
 
