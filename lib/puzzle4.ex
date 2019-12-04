@@ -35,12 +35,10 @@ defmodule Puzzle4 do
   @spec digits_never_decrease?(digits()) :: boolean()
   def digits_never_decrease?(digits) do
     digits
-    |> Enum.reduce({true, nil}, fn
-      n, {_, nil} -> {true, n}
-      m, {true, n} when m >= n -> {true, m}
-      n, _ -> {false, n}
-    end)
+    |> Enum.map_reduce(0, fn digit, last -> {{digit, last}, digit} end)
     |> elem(0)
+    |> tl()
+    |> Enum.all?(fn {a, b} -> a >= b end)
   end
 
   @spec has_equal_adjacent_digits?(digits()) :: boolean()
