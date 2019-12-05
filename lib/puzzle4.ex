@@ -5,7 +5,7 @@ defmodule Puzzle4 do
 
   @type digits :: [non_neg_integer()]
 
-  @range 402328..864247
+  @range 402_328..864_247
 
   @spec possible_passwords() :: [integer()]
   def possible_passwords do

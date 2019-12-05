@@ -16,23 +16,23 @@ defmodule Puzzle4Test do
 
   describe "is_valid_password?/1" do
     test "matches requirement 1" do
-      assert is_valid_password?(112233)
+      assert is_valid_password?(112_233)
     end
 
     test "matches requirement 2" do
-      refute is_valid_password?(223450)
+      refute is_valid_password?(223_450)
     end
 
     test "matches requirement 3" do
-      refute is_valid_password?(123789)
+      refute is_valid_password?(123_789)
     end
 
     test "matches part 2 requirement 2" do
-      refute is_valid_password?(123444)
+      refute is_valid_password?(123_444)
     end
 
     test "matches part 2 requirement 3" do
-      assert is_valid_password?(111122)
+      assert is_valid_password?(111_122)
     end
   end
 
@@ -46,20 +46,20 @@ defmodule Puzzle4Test do
     end
 
     test "returns true when there are adjacent equal digits outside of a cluster" do
-      assert has_equal_adjacent_digits?(digits(112222))
-      assert has_equal_adjacent_digits?(digits(222211))
-      assert has_equal_adjacent_digits?(digits(221122))
-      assert has_equal_adjacent_digits?(digits(221333))
+      assert has_equal_adjacent_digits?(digits(112_222))
+      assert has_equal_adjacent_digits?(digits(222_211))
+      assert has_equal_adjacent_digits?(digits(221_122))
+      assert has_equal_adjacent_digits?(digits(221_333))
     end
 
     test "returns false when matching digits are part of a larger group" do
-      refute has_equal_adjacent_digits?(digits(111234))
+      refute has_equal_adjacent_digits?(digits(111_234))
     end
   end
 
   describe "digits_never_decrease?/1" do
     test "returns true when digits are increasing" do
-      assert digits_never_decrease?(digits(1234567))
+      assert digits_never_decrease?(digits(1_234_567))
     end
 
     test "returns true if digits are the same" do
@@ -67,17 +67,17 @@ defmodule Puzzle4Test do
     end
 
     test "returns false if digits decrease" do
-      refute digits_never_decrease?(digits(133742))
+      refute digits_never_decrease?(digits(133_742))
     end
   end
 
   describe "has_six_digits?/1" do
     test "returns true with six digits" do
-      assert has_six_digits?(digits(123456))
+      assert has_six_digits?(digits(123_456))
     end
 
     test "returns false when has more than six" do
-      refute has_six_digits?(digits(12345678))
+      refute has_six_digits?(digits(12_345_678))
     end
 
     test "returns false when has less than six" do

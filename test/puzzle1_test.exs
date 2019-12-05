@@ -5,7 +5,7 @@ defmodule Puzzle1Test do
 
   describe "from_input/1" do
     test "computes fuel for modules" do
-      assert 4892166 = from_input("test/support/puzzle1/input.txt")
+      assert 4_892_166 = from_input("test/support/puzzle1/input.txt")
     end
 
     test "reads module masses from file" do
