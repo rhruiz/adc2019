@@ -16,6 +16,10 @@ defmodule Puzzle5 do
     2 => 3,
     3 => 1,
     4 => 1,
+    5 => 2,
+    6 => 2,
+    7 => 3,
+    8 => 3,
     99 => 0
   }
 
@@ -57,20 +61,12 @@ defmodule Puzzle5 do
       |> Enum.at(address)
       |> parse_op()
 
-    case opcode do
-      99 ->
-        input
+    params =
+      input
+      |> Enum.slice(address + 1, input_size)
+      |> Enum.zip(input_modes)
 
-      _other ->
-        params =
-          input
-          |> Enum.slice(address + 1, input_size)
-          |> Enum.zip(input_modes)
-
-        __MODULE__
-        |> apply(:perform, [opcode, input | params])
-        |> run_intcode(address + 1 + input_size)
-    end
+    apply(__MODULE__, :perform, [opcode, address, input | params])
   end
 
   @spec parse_op(integer()) :: operation()
@@ -101,36 +97,54 @@ defmodule Puzzle5 do
     collection
   end
 
-  defp read_input(_input, {value, 1}) do
-    value
-  end
+  defp read_input(_input, {value, 1}), do: value
 
   defp read_input(input, {position, 0}) do
     Enum.at(input, position)
   end
 
-  def perform(opcode, input, a, b, {position, _}) when opcode in [1, 2] do
+  def perform(99, _, input), do: input
+
+  def perform(opcode, address, input, a, b, {position, _}) when opcode in [1, 2, 7, 8] do
     a = read_input(input, a)
     b = read_input(input, b)
 
-    List.replace_at(input, position, op(opcode).(a, b))
+    input
+    |> List.replace_at(position, op(opcode).(a, b))
+    |> run_intcode(address + 4)
   end
 
-  def perform(3, input, {position, _}) do
+  def perform(3, address, input, {position, _}) do
     value =
       "Input: "
       |> io().gets()
       |> String.trim()
       |> String.to_integer()
 
-    List.replace_at(input, position, value)
-  end
-
-  def perform(4, input, pos) do
-    input |> read_input(pos) |> IO.puts()
-
     input
+    |> List.replace_at(position, value)
+    |> run_intcode(address + 2)
   end
+
+  def perform(4, address, input, pos) do
+    input |> read_input(pos) |> io().puts()
+
+    run_intcode(input, address + 2)
+  end
+
+  def perform(opcode, address, input, conditional, target) when opcode in [5, 6] do
+    input
+    |> read_input(conditional)
+    |> op(opcode).(0)
+    |> jump(input, address, target)
+  end
+
+  defp jump(true, input, _address, target) do
+    jump = read_input(input, target)
+    run_intcode(input, jump)
+  end
+
+  defp jump(false, input, address, _target), do: run_intcode(input, address + 3)
 
   defp io do
     Application.get_env(:adc2019, :io, IO)
@@ -138,4 +152,8 @@ defmodule Puzzle5 do
 
   defp op(1), do: &+/2
   defp op(2), do: &*/2
+  defp op(5), do: &!=/2
+  defp op(6), do: &==/2
+  defp op(7), do: fn a, b -> if(a < b, do: 1, else: 0) end
+  defp op(8), do: fn a, b -> if(a == b, do: 1, else: 0) end
 end
