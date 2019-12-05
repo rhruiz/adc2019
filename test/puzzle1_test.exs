@@ -9,7 +9,7 @@ defmodule Puzzle1Test do
     end
 
     test "reads module masses from file" do
-      assert 2 + 2 + 966 + 50346 ==
+      assert 2 + 2 + 966 + 50_346 ==
                from_input("test/support/puzzle1/fuel.txt")
     end
 
@@ -26,7 +26,7 @@ defmodule Puzzle1Test do
     end
 
     test "verify requirements" do
-      assert 2 + 2 + 966 + 50346 ==
+      assert 2 + 2 + 966 + 50_346 ==
                total_fuel([12, 14, 1969, 100_756])
     end
 
@@ -47,7 +47,7 @@ defmodule Puzzle1Test do
     end
 
     test "a mass of 100756 requires 33583 fuel" do
-      assert total_fuel([100_756]) == 50346
+      assert total_fuel([100_756]) == 50_346
     end
   end
 
@@ -72,7 +72,7 @@ defmodule Puzzle1Test do
     end
 
     test "a mass of 100756 requires 33583 fuel" do
-      assert fuel(100_756) == 33583
+      assert fuel(100_756) == 33_583
     end
   end
 end

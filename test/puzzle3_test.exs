@@ -80,7 +80,7 @@ defmodule Puzzle3Test do
     end
 
     test "computes the fastest path from input" do
-      assert 27890 = from_input("test/support/puzzle3/input.txt", :shortest_time)
+      assert 27_890 = from_input("test/support/puzzle3/input.txt", :shortest_time)
     end
   end
 end
