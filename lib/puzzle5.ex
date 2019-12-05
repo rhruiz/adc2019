@@ -6,10 +6,10 @@ defmodule Puzzle5 do
   require Logger
 
   @type intcode :: [integer()]
-  @type execution :: intcode | :halt_and_catch_fire
+  @type execution :: intcode()
   @type input_mode :: 0 | 1
   @type operation ::
-          {opcode :: integer(), input_size :: non_neg_integer(), input_mode :: input_mode()}
+          {opcode :: integer(), input_size :: non_neg_integer(), input_mode :: [input_mode()]}
 
   @input_size %{
     1 => 3,
