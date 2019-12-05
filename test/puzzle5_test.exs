@@ -10,6 +10,11 @@ defmodule Puzzle5Test do
 
   setup :verify_on_exit!
 
+  def expect_in_out(input, output) do
+    expect(IOMock, :gets, fn "Input: " -> "#{input}\n" end)
+    expect(IOMock, :puts, fn ^output -> :ok end)
+  end
+
   describe "from_input/1" do
     test "runs the TESTs" do
       {:ok, prints} = Agent.start_link(fn -> [] end)
@@ -31,8 +36,7 @@ defmodule Puzzle5Test do
     end
 
     test "runs the TESTs with conditionals" do
-      expect(IOMock, :gets, fn "Input: " -> "5\n" end)
-      expect(IOMock, :puts, fn 8_834_787 -> :ok end)
+      expect_in_out(5, 8_834_787)
 
       from_input("test/support/puzzle5/input.txt")
     end
@@ -48,76 +52,54 @@ defmodule Puzzle5Test do
     end
 
     test "matches input/output requirement" do
-      expect(IOMock, :gets, fn "Input: " ->
-        "42\n"
-      end)
-
-      expect(IOMock, :puts, fn 42 -> :ok end)
+      expect_in_out(42, 42)
 
       assert [42 | _] = [3, 0, 4, 0, 99] |> run_intcode()
     end
 
     test "matches equal to 8 condition in position mode" do
-      expect(IOMock, :gets, fn "Input: " -> "8\n" end)
-      expect(IOMock, :puts, fn 1 -> :ok end)
-
-      expect(IOMock, :gets, fn "Input: " -> "42\n" end)
-      expect(IOMock, :puts, fn 0 -> :ok end)
+      expect_in_out(8, 1)
+      expect_in_out(42, 0)
 
       [3, 9, 8, 9, 10, 9, 4, 9, 99, -1, 8] |> run_intcode()
       [3, 9, 8, 9, 10, 9, 4, 9, 99, -1, 8] |> run_intcode()
     end
 
     test "matches less than 8 condition in position mode" do
-      expect(IOMock, :gets, fn "Input: " -> "4\n" end)
-      expect(IOMock, :puts, fn 1 -> :ok end)
-
-      expect(IOMock, :gets, fn "Input: " -> "42\n" end)
-      expect(IOMock, :puts, fn 0 -> :ok end)
+      expect_in_out(4, 1)
+      expect_in_out(42, 0)
 
       [3, 9, 7, 9, 10, 9, 4, 9, 99, -1, 8] |> run_intcode()
       [3, 9, 7, 9, 10, 9, 4, 9, 99, -1, 8] |> run_intcode()
     end
 
     test "matches equal to 8 in immediate mode" do
-      expect(IOMock, :gets, fn "Input: " -> "8\n" end)
-      expect(IOMock, :puts, fn 1 -> :ok end)
-
-      expect(IOMock, :gets, fn "Input: " -> "42\n" end)
-      expect(IOMock, :puts, fn 0 -> :ok end)
+      expect_in_out(8, 1)
+      expect_in_out(42, 0)
 
       [3, 3, 1108, -1, 8, 3, 4, 3, 99] |> run_intcode()
       [3, 3, 1108, -1, 8, 3, 4, 3, 99] |> run_intcode()
     end
 
     test "matches less than 8 condition in immediate mode" do
-      expect(IOMock, :gets, fn "Input: " -> "4\n" end)
-      expect(IOMock, :puts, fn 1 -> :ok end)
-
-      expect(IOMock, :gets, fn "Input: " -> "42\n" end)
-      expect(IOMock, :puts, fn 0 -> :ok end)
+      expect_in_out(4, 1)
+      expect_in_out(42, 0)
 
       [3, 3, 1107, -1, 8, 3, 4, 3, 99] |> run_intcode()
       [3, 3, 1107, -1, 8, 3, 4, 3, 99] |> run_intcode()
     end
 
     test "matches jump test in position mode" do
-      expect(IOMock, :gets, fn "Input: " -> "42\n" end)
-      expect(IOMock, :puts, fn 1 -> :ok end)
-
-      expect(IOMock, :gets, fn "Input: " -> "0\n" end)
-      expect(IOMock, :puts, fn 0 -> :ok end)
+      expect_in_out(42, 1)
+      expect_in_out(0, 0)
 
       [3, 12, 6, 12, 15, 1, 13, 14, 13, 4, 13, 99, -1, 0, 1, 9] |> run_intcode()
       [3, 12, 6, 12, 15, 1, 13, 14, 13, 4, 13, 99, -1, 0, 1, 9] |> run_intcode()
     end
 
     test "matches jump test in immediate mode" do
-      expect(IOMock, :gets, fn "Input: " -> "42\n" end)
-      expect(IOMock, :puts, fn 1 -> :ok end)
-
-      expect(IOMock, :gets, fn "Input: " -> "0\n" end)
-      expect(IOMock, :puts, fn 0 -> :ok end)
+      expect_in_out(42, 1)
+      expect_in_out(0, 0)
 
       [3, 3, 1105, -1, 9, 1101, 0, 0, 12, 4, 12, 99, 1] |> run_intcode()
       [3, 3, 1105, -1, 9, 1101, 0, 0, 12, 4, 12, 99, 1] |> run_intcode()
@@ -176,14 +158,9 @@ defmodule Puzzle5Test do
         ])
       end
 
-      expect(IOMock, :gets, fn "Input: " -> "42\n" end)
-      expect(IOMock, :puts, fn 1001 -> :ok end)
-
-      expect(IOMock, :gets, fn "Input: " -> "0\n" end)
-      expect(IOMock, :puts, fn 999 -> :ok end)
-
-      expect(IOMock, :gets, fn "Input: " -> "8\n" end)
-      expect(IOMock, :puts, fn 1000 -> :ok end)
+      expect_in_out(42, 1001)
+      expect_in_out(0, 999)
+      expect_in_out(8, 1000)
 
       run.()
       run.()
