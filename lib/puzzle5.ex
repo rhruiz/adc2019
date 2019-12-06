@@ -3,8 +3,6 @@ defmodule Puzzle5 do
   TEST/intcode program for day 5
   """
 
-  require Logger
-
   @type intcode :: [integer()]
   @type execution :: intcode()
   @type input_mode :: 0 | 1
@@ -71,20 +69,16 @@ defmodule Puzzle5 do
 
   @spec parse_op(integer()) :: operation()
   def parse_op(op) do
-    case Enum.reverse(Integer.digits(op)) do
-      [9, 9 | _] ->
-        {99, 0, []}
+    {input_control, opcode} =
+      op
+      |> Integer.digits()
+      |> Enum.split(-2)
 
-      [opcode | []] ->
-        input_size = @input_size[opcode]
+    opcode = Integer.undigits(opcode)
+    input_control = Enum.reverse(input_control)
+    input_size = @input_size[opcode]
 
-        {opcode, input_size, pad([], input_size)}
-
-      [opcode, _ | input_control] ->
-        input_size = @input_size[opcode]
-
-        {opcode, input_size, pad(input_control, input_size)}
-    end
+    {opcode, input_size, pad(input_control, input_size)}
   end
 
   defp pad(collection, size, fill \\ 0)
@@ -98,10 +92,7 @@ defmodule Puzzle5 do
   end
 
   defp read_input(_input, {value, 1}), do: value
-
-  defp read_input(input, {position, 0}) do
-    Enum.at(input, position)
-  end
+  defp read_input(input, {position, 0}), do: Enum.at(input, position)
 
   def perform(99, _, input), do: input
 
