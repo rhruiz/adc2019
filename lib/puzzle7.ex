@@ -3,7 +3,6 @@ defmodule Puzzle7 do
   AmpOps. Why does it have to be AmpOps?
   """
 
-  import Puzzle5, only: [run_intcode: 2]
   import Puzzle2, only: [read_file: 1]
 
   def find_max_output(program \\ read_file("test/support/puzzle7/input.txt")) do
@@ -40,7 +39,7 @@ defmodule Puzzle7 do
       phases
       |> Enum.with_index()
       |> Enum.map(fn {phase, n} ->
-        start_amp(program, n, phase)
+        Amp.start_link(program, n, phase)
       end)
 
     last = length(amps) - 1
@@ -50,7 +49,7 @@ defmodule Puzzle7 do
   defp receiver(input, waiting_for, amps, last) do
     amps
     |> Enum.at(waiting_for)
-    |> send({:input, input})
+    |> Amp.input(input)
 
     receive do
       {:output, ^waiting_for, output} ->
@@ -62,51 +61,15 @@ defmodule Puzzle7 do
     end
   end
 
-  defp start_amp(program, ref, phase) do
-    receiver = self()
-    opts = [
-      gets: fn _ ->
-        receive do
-          {:input, content} -> "#{content}\n"
-        end
-      end,
-      puts: fn content ->
-        send(receiver, {:output, ref, content})
-      end
-    ]
-
-    amp =
-      spawn_link(fn ->
-        run_intcode(program, opts)
-        send(receiver, {:halted, ref})
-      end)
-
-    send(amp, {:input, phase})
-
-    amp
-  end
-
   defp run_amp(program, phase, amp_input) do
-    target = self()
+    ref = make_ref()
 
-    opts = [
-      gets: fn _ ->
-        receive do
-          {:input, content} -> "#{content}\n"
-        end
-      end,
-      puts: fn content ->
-        send(target, {:output, content})
-      end
-    ]
+    amp = Amp.start_link(program, ref, phase)
 
-    send(target, {:input, phase})
-    send(target, {:input, amp_input})
-
-    run_intcode(program, opts)
+    Amp.input(amp, amp_input)
 
     receive do
-      {:output, content} -> content
+      {:output, ^ref, content} -> content
     end
   end
 end
