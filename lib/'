@@ -1,0 +1,22 @@
+defmodule Puzzle7 do
+  @moduledoc """
+  AmpOps. Why does it have to be AmpOps?
+  """
+
+  import Puzzle5, only: [run_intcode: 1]
+  import Puzzle2, only: [read_file: 1]
+
+  def test_phase_sequence(seq, program \\ read_file("test/support/puzzle7/input.txt")) do
+    Application.put_env(:adc2019, :io, IOMock)
+
+    Enum.reduce(seq, 0, fn phase, input ->
+      program
+      |> run_amp(phase, input)
+      |> Enum.at(3)
+    end)
+  end
+
+  def run_amp([head, _, _ | tail], phase, amp_input) do
+    run_intcode([head, phase, amp_input | tail])
+  end
+end
