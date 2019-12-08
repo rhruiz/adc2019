@@ -10,6 +10,7 @@ defmodule Puzzle8 do
   end
 
   def ansi(image) do
+    IO.write('\n')
     image
     |> Enum.each(fn row ->
       row
