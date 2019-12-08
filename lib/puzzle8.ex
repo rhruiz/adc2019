@@ -3,10 +3,45 @@ defmodule Puzzle8 do
   Pixels. Images. Elves.
   """
 
+  def render do
+    "test/support/puzzle8/input.txt"
+    |> read_file()
+    |> render(25, 6)
+  end
+
+  def ansi(image) do
+    image
+    |> Enum.each(fn row ->
+      row
+      |> Enum.map(fn
+        0 -> [IO.ANSI.black_background(), " "]
+        1 -> [IO.ANSI.white_background(), " "]
+      end)
+      |> IO.puts()
+    end)
+
+    IO.ANSI.reset()
+  end
+
+  def render(input, width, height) do
+    input
+    |> Enum.chunk_every(width * height)
+    |> Enum.reduce(fn layer, composite ->
+      layer
+      |> Enum.zip(composite)
+      |> Enum.map(fn
+        {other, 2} -> other
+        {_, 0} -> 0
+        {_, 1} -> 1
+      end)
+    end)
+    |> Enum.chunk_every(width)
+  end
+
   def least_zeros do
     "test/support/puzzle8/input.txt"
     |> read_file()
-    |> to_digits(25, 6)
+    |> to_layers(25, 6)
     |> Enum.sort_by(fn layer ->
       layer
       |> Enum.flat_map(fn layer -> layer end)
@@ -27,7 +62,7 @@ defmodule Puzzle8 do
     |> Enum.reduce(&*/2)
   end
 
-  def to_digits(digits, width, height) do
+  def to_layers(digits, width, height) do
     digits
     |> Enum.chunk_every(width * height)
     |> Enum.map(fn layer -> Enum.chunk_every(layer, width) end)
