@@ -47,29 +47,29 @@ defmodule Puzzle7 do
   end
 
   defp receiver(input, waiting_for, amps, last) do
-    amps
-    |> Enum.at(waiting_for)
-    |> Amp.input(input)
+    next = rem(waiting_for + 1, last + 1)
 
-    receive do
-      {:output, ^waiting_for, output} ->
-        next = rem(waiting_for + 1, last + 1)
-        receiver(output, next, amps, last)
+    result =
+      amps
+      |> Enum.at(waiting_for)
+      |> Amp.run(waiting_for, input)
 
-      {:halted, ^last} ->
+    case {waiting_for, result} do
+      {^last, :halt} ->
         input
+
+      {_, :halt} ->
+        receiver(input, next, amps, last)
+
+      {_, output} ->
+        receiver(output, next, amps, last)
     end
   end
 
   defp run_amp(program, phase, amp_input) do
     ref = make_ref()
-
     amp = Amp.start_link(program, ref, phase)
 
-    Amp.input(amp, amp_input)
-
-    receive do
-      {:output, ^ref, content} -> content
-    end
+    Amp.run(amp, ref, amp_input)
   end
 end

@@ -106,7 +106,7 @@ defmodule Puzzle5 do
   end
 
   def perform(3, address, input, opts, {position, _}) do
-    get_string = Keyword.get(opts, :gets, &(io().gets/1))
+    get_string = Keyword.get(opts, :gets, &io().gets/1)
 
     value =
       "Input: "
@@ -120,7 +120,7 @@ defmodule Puzzle5 do
   end
 
   def perform(4, address, input, opts, pos) do
-    put_string = Keyword.get(opts, :puts, &(io().puts/1))
+    put_string = Keyword.get(opts, :puts, &io().puts/1)
 
     input |> read_input(pos) |> put_string.()
 
