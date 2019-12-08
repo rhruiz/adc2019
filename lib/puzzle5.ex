@@ -48,12 +48,12 @@ defmodule Puzzle5 do
   @doc """
   Runs the intcode program described by `input`
   """
-  @spec run_intcode(intcode()) :: execution()
-  def run_intcode(input) do
-    run_intcode(input, 0)
+  @spec run_intcode(intcode(), Keyword.t()) :: execution()
+  def run_intcode(input, opts \\ []) do
+    run_intcode(input, 0, opts)
   end
 
-  defp run_intcode(input, address) do
+  defp run_intcode(input, address, opts) do
     {opcode, input_size, input_modes} =
       input
       |> Enum.at(address)
@@ -64,7 +64,7 @@ defmodule Puzzle5 do
       |> Enum.slice(address + 1, input_size)
       |> Enum.zip(input_modes)
 
-    apply(__MODULE__, :perform, [opcode, address, input | params])
+    apply(__MODULE__, :perform, [opcode, address, input, opts | params])
   end
 
   @spec parse_op(integer()) :: operation()
@@ -94,48 +94,52 @@ defmodule Puzzle5 do
   defp read_input(_input, {value, 1}), do: value
   defp read_input(input, {position, 0}), do: Enum.at(input, position)
 
-  def perform(99, _, input), do: input
+  def perform(99, _, input, _), do: input
 
-  def perform(opcode, address, input, a, b, {position, _}) when opcode in [1, 2, 7, 8] do
+  def perform(opcode, address, input, opts, a, b, {position, _}) when opcode in [1, 2, 7, 8] do
     a = read_input(input, a)
     b = read_input(input, b)
 
     input
     |> List.replace_at(position, op(opcode).(a, b))
-    |> run_intcode(address + 4)
+    |> run_intcode(address + 4, opts)
   end
 
-  def perform(3, address, input, {position, _}) do
+  def perform(3, address, input, opts, {position, _}) do
+    get_string = Keyword.get(opts, :gets, &(io().gets/1))
+
     value =
       "Input: "
-      |> io().gets()
+      |> get_string.()
       |> String.trim()
       |> String.to_integer()
 
     input
     |> List.replace_at(position, value)
-    |> run_intcode(address + 2)
+    |> run_intcode(address + 2, opts)
   end
 
-  def perform(4, address, input, pos) do
-    input |> read_input(pos) |> io().puts()
+  def perform(4, address, input, opts, pos) do
+    put_string = Keyword.get(opts, :puts, &(io().puts/1))
 
-    run_intcode(input, address + 2)
+    input |> read_input(pos) |> put_string.()
+
+    run_intcode(input, address + 2, opts)
   end
 
-  def perform(opcode, address, input, conditional, target) when opcode in [5, 6] do
+  def perform(opcode, address, input, opts, conditional, target) when opcode in [5, 6] do
     input
     |> read_input(conditional)
     |> op(opcode).(0)
-    |> jump(input, address, target)
+    |> jump(input, address, target, opts)
   end
 
-  defp jump(true, input, _address, target) do
+  defp jump(true, input, _address, target, opts) do
     jump = read_input(input, target)
-    run_intcode(input, jump)
+    run_intcode(input, jump, opts)
   end
 
-  defp jump(false, input, address, _target), do: run_intcode(input, address + 3)
+  defp jump(false, input, address, _target, opts), do: run_intcode(input, address + 3, opts)
 
   defp io do
     Application.get_env(:adc2019, :io, IO)

@@ -3,9 +3,8 @@ defmodule Puzzle7 do
   AmpOps. Why does it have to be AmpOps?
   """
 
-  import Puzzle5, only: [run_intcode: 1]
+  import Puzzle5, only: [run_intcode: 2]
   import Puzzle2, only: [read_file: 1]
-  import Mox
 
   def find_max_output(program \\ read_file("test/support/puzzle7/input.txt")) do
     test_phases(0..4, program, &test_phase_sequence/2)
@@ -16,8 +15,6 @@ defmodule Puzzle7 do
   end
 
   def test_phase_sequence(seq, program) do
-    Application.put_env(:adc2019, :io, IOMock)
-
     Enum.reduce(seq, 0, fn phase, input ->
       run_amp(program, phase, input)
     end)
@@ -39,8 +36,6 @@ defmodule Puzzle7 do
   end
 
   def run_feedback_loop(phases, program) do
-    Application.put_env(:adc2019, :io, IOMock)
-
     amps =
       phases
       |> Enum.with_index()
@@ -69,20 +64,20 @@ defmodule Puzzle7 do
 
   defp start_amp(program, ref, phase) do
     receiver = self()
+    opts = [
+      gets: fn _ ->
+        receive do
+          {:input, content} -> "#{content}\n"
+        end
+      end,
+      puts: fn content ->
+        send(receiver, {:output, ref, content})
+      end
+    ]
 
     amp =
       spawn_link(fn ->
-        stub(IOMock, :gets, fn _ ->
-          receive do
-            {:input, content} -> "#{content}\n"
-          end
-        end)
-
-        stub(IOMock, :puts, fn content ->
-          send(receiver, {:output, ref, content})
-        end)
-
-        run_intcode(program)
+        run_intcode(program, opts)
         send(receiver, {:halted, ref})
       end)
 
@@ -92,17 +87,26 @@ defmodule Puzzle7 do
   end
 
   defp run_amp(program, phase, amp_input) do
-    {:ok, grabber} = Agent.start_link(fn -> nil end)
-    expect(IOMock, :gets, fn _ -> "#{phase}\n" end)
-    expect(IOMock, :gets, fn _ -> "#{amp_input}\n" end)
+    target = self()
 
-    expect(IOMock, :puts, fn content ->
-      Agent.update(grabber, fn _ -> content end)
-      :ok
-    end)
+    opts = [
+      gets: fn _ ->
+        receive do
+          {:input, content} -> "#{content}\n"
+        end
+      end,
+      puts: fn content ->
+        send(target, {:output, content})
+      end
+    ]
 
-    run_intcode(program)
+    send(target, {:input, phase})
+    send(target, {:input, amp_input})
 
-    Agent.get(grabber, fn content -> content end)
+    run_intcode(program, opts)
+
+    receive do
+      {:output, content} -> content
+    end
   end
 end
