@@ -40,7 +40,6 @@ defmodule Puzzle7 do
     |> (fn amps ->
       [amps, Stream.cycle(0..4), Stream.cycle([length(phases) - 1])]
     end).()
-    |> List.wrap()
     |> Stream.zip()
     |> Stream.cycle()
     |> Stream.transform(0, fn {amp, index, last}, input ->
