@@ -35,32 +35,28 @@ defmodule Puzzle7 do
   end
 
   def run_feedback_loop(phases, program) do
-    amps =
-      phases
-      |> Enum.map(fn phase ->
-        Amp.start_link(program, phase)
-      end)
+    phases
+    |> Enum.map(fn phase -> Amp.start_link(program, phase) end)
+    |> (fn amps ->
+      [amps, Stream.cycle(0..4), Stream.cycle([length(phases) - 1])]
+    end).()
+    |> List.wrap()
+    |> Stream.zip()
+    |> Stream.cycle()
+    |> Stream.transform(0, fn {amp, index, last}, input ->
+      case {index, last, Amp.run(amp, input)} do
+        {n, n, :halt} ->
+          {[input], :halt}
 
-    last = length(amps) - 1
-    receiver(0, 0, amps, last)
-  end
+        {_, _, :halt} ->
+          {[], input}
 
-  defp receiver(input, waiting_for, amps, last) do
-    next = rem(waiting_for + 1, last + 1)
-    amp = Enum.at(amps, waiting_for)
-
-    result = Amp.run(amp, input)
-
-    case {waiting_for, result} do
-      {^last, :halt} ->
-        input
-
-      {_, :halt} ->
-        receiver(input, next, amps, last)
-
-      {_, output} ->
-        receiver(output, next, amps, last)
-    end
+        {_, _, output} ->
+          {[], output}
+      end
+    end)
+    |> Enum.take(1)
+    |> hd()
   end
 
   defp run_amp(program, phase, amp_input) do
