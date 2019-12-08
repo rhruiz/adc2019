@@ -37,9 +37,8 @@ defmodule Puzzle7 do
   def run_feedback_loop(phases, program) do
     amps =
       phases
-      |> Enum.with_index()
-      |> Enum.map(fn {phase, n} ->
-        Amp.start_link(program, n, phase)
+      |> Enum.map(fn phase ->
+        Amp.start_link(program, phase)
       end)
 
     last = length(amps) - 1
@@ -48,11 +47,9 @@ defmodule Puzzle7 do
 
   defp receiver(input, waiting_for, amps, last) do
     next = rem(waiting_for + 1, last + 1)
+    amp = Enum.at(amps, waiting_for)
 
-    result =
-      amps
-      |> Enum.at(waiting_for)
-      |> Amp.run(waiting_for, input)
+    result = Amp.run(amp, input)
 
     case {waiting_for, result} do
       {^last, :halt} ->
@@ -67,9 +64,8 @@ defmodule Puzzle7 do
   end
 
   defp run_amp(program, phase, amp_input) do
-    ref = make_ref()
-    amp = Amp.start_link(program, ref, phase)
-
-    Amp.run(amp, ref, amp_input)
+    program
+    |> Amp.start_link(phase)
+    |> Amp.run(amp_input)
   end
 end

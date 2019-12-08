@@ -5,16 +5,16 @@ defmodule Amp do
 
   import Puzzle5, only: [run_intcode: 2]
 
-  def run(amp, ref, input) do
+  def run(amp, input) do
     input(amp, input)
 
     receive do
-      {:output, ^ref, content} -> content
-      {:halted, ^ref} -> :halt
+      {:output, ^amp, content} -> content
+      {:halted, ^amp} -> :halt
     end
   end
 
-  def start_link(program, ref, phase, opts \\ []) do
+  def start_link(program, phase, opts \\ []) do
     receiver = self()
 
     opts =
@@ -26,7 +26,7 @@ defmodule Amp do
             end
           end,
           puts: fn content ->
-            send(receiver, {:output, ref, content})
+            send(receiver, {:output, self(), content})
           end
         ],
         opts
@@ -35,7 +35,7 @@ defmodule Amp do
     amp =
       spawn_link(fn ->
         run_intcode(program, opts)
-        send(receiver, {:halted, ref})
+        send(receiver, {:halted, self()})
       end)
 
     input(amp, phase)
