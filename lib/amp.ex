@@ -3,8 +3,6 @@ defmodule Amp do
   Module to work with an amplifier
   """
 
-  import Puzzle5, only: [run_intcode: 2]
-
   def run(amp, input) do
     input(amp, input)
 
@@ -34,7 +32,7 @@ defmodule Amp do
 
     amp =
       spawn_link(fn ->
-        run_intcode(program, opts)
+        Intcode.run(program, opts)
         send(receiver, {:halted, self()})
       end)
 
