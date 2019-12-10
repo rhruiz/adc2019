@@ -3,7 +3,7 @@ defmodule Puzzle7 do
   AmpOps. Why does it have to be AmpOps?
   """
 
-  import Puzzle2, only: [read_file: 1]
+  import Intcode, only: [read_file: 1]
 
   def find_max_output(program \\ read_file("test/support/puzzle7/input.txt")) do
     test_phases(0..4, program, &test_phase_sequence/2)
@@ -38,8 +38,8 @@ defmodule Puzzle7 do
     phases
     |> Enum.map(fn phase -> Amp.start_link(program, phase) end)
     |> (fn amps ->
-      [amps, Stream.cycle(0..4), Stream.cycle([length(phases) - 1])]
-    end).()
+          [amps, Stream.cycle(0..4), Stream.cycle([length(phases) - 1])]
+        end).()
     |> Stream.zip()
     |> Stream.cycle()
     |> Stream.transform(0, fn {amp, index, last}, input ->
