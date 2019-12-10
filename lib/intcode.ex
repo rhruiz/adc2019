@@ -6,6 +6,7 @@ defmodule Intcode do
   alias Intcode.State
 
   @type t :: [integer()]
+  @typep optimized :: %{required(non_neg_integer) => integer()}
   @type input_mode :: 0 | 1 | 2
   @type operation ::
           {opcode :: integer(), input_size :: non_neg_integer(), input_mode :: [input_mode()]}
@@ -50,20 +51,30 @@ defmodule Intcode do
   @doc """
   Runs the intcode program described by `input`
   """
-  @spec run(t(), Keyword.t()) :: t()
-  def run(input, opts \\ []) do
-    run(input, %State{}, 0, opts)
+  @spec run(t() | optimized(), Keyword.t()) :: t()
+  def run(input, opts \\ [])
+
+  def run(input, opts) when is_map(input) do
+    run(input, State.new(), 0, opts)
+  end
+
+  def run(input, opts) do
+    input
+    |> Stream.with_index()
+    |> Enum.into(%{}, fn {value, index} -> {index, value} end)
+    |> run(opts)
   end
 
   defp run(input, state, address, opts) do
     {opcode, input_size, input_modes} =
       input
-      |> Enum.at(address)
+      |> Map.get(address)
       |> parse_op()
 
     params =
-      input
-      |> Enum.slice(address + 1, input_size)
+      (address + 1)..(address + 1 + input_size)
+      |> Enum.into([])
+      |> Enum.map(fn index -> Map.get(input, index) end)
       |> Enum.zip(input_modes)
 
     apply(__MODULE__, :perform, [opcode, state, address, input, opts | params])
@@ -96,9 +107,7 @@ defmodule Intcode do
   defp read_input(_input, _state, {value, 1}), do: value
 
   defp read_input(input, _state, {position, 0}) do
-    input
-    |> pad(position + 1)
-    |> Enum.at(position)
+    Map.get(input, position, 0)
   end
 
   defp read_input(input, state = %{relative_base: base}, {relative, 2}) do
@@ -109,25 +118,20 @@ defmodule Intcode do
     write(input, base + position, value)
   end
 
-  defp write(_input, _state, _address, {_position, 1}, _value) do
-    raise "boom"
-  end
-
   defp write(input, _state, _address, {position, _}, value) do
     write(input, position, value)
   end
 
-  defp write(_input, position, _value) when position < 0 do
-    raise "boom"
-  end
-
   defp write(input, position, value) do
-    input
-    |> pad(position + 1)
-    |> List.replace_at(position, value)
+    Map.put(input, position, value)
   end
 
-  def perform(99, _, _, input, _), do: input
+  def perform(99, _, _, input, _) do
+    input
+    |> Map.keys()
+    |> Enum.sort()
+    |> Enum.map(fn key -> Map.get(input, key) end)
+  end
 
   def perform(opcode, state, address, input, opts, a, b, position) when opcode in [1, 2, 7, 8] do
     a = read_input(input, state, a)
@@ -155,9 +159,7 @@ defmodule Intcode do
   def perform(9, state, address, input, opts, target) do
     target = read_input(input, state, target)
 
-    state = Map.update(state, :relative_base, 0, fn base -> base + target end)
-
-    run(input, state, address + 2, opts)
+    run(input, State.rebase(state, target), address + 2, opts)
   end
 
   def perform(4, state, address, input, opts, pos) do
