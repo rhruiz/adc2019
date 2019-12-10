@@ -222,4 +222,42 @@ defmodule IntcodeTest do
       assert [30, 1, 1, 4, 2, 5, 6, 0, 99] == run([1, 1, 1, 4, 99, 5, 6, 0, 99])
     end
   end
+
+  describe "opcode 9 and large number support" do
+    test "matches day 9 star 1 requirement 1" do
+      {:ok, acc} = Agent.start_link(fn -> [] end)
+
+      stub(IOMock, :puts, fn output ->
+        Agent.update(acc, fn acc -> [output | acc] end)
+        :ok
+      end)
+
+      program = [109, 1, 204, -1, 1001, 100, 1, 100, 1008, 100, 16, 101, 1006, 101, 0, 99]
+
+      run(program)
+
+      assert ^program =
+               acc
+               |> Agent.get(fn acc -> acc end)
+               |> Enum.reverse()
+    end
+
+    test "matches day 9 star 1 requirement 2" do
+      expect(IOMock, :puts, fn output ->
+        assert 16 = output |> Integer.digits() |> length
+
+        :ok
+      end)
+
+      run([1102, 34_915_192, 34_915_192, 7, 4, 7, 99, 0])
+    end
+
+    test "matches day 9 star 1 requirement 3" do
+      expect(IOMock, :puts, fn 1_125_899_906_842_624 ->
+        :ok
+      end)
+
+      run([104, 1_125_899_906_842_624, 99])
+    end
+  end
 end

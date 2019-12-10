@@ -38,8 +38,8 @@ defmodule Puzzle7 do
     phases
     |> Enum.map(fn phase -> Amp.start_link(program, phase) end)
     |> (fn amps ->
-      [amps, Stream.cycle(0..4), Stream.cycle([length(phases) - 1])]
-    end).()
+          [amps, Stream.cycle(0..4), Stream.cycle([length(phases) - 1])]
+        end).()
     |> Stream.zip()
     |> Stream.cycle()
     |> Stream.transform(0, fn {amp, index, last}, input ->
