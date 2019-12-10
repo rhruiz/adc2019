@@ -224,6 +224,19 @@ defmodule IntcodeTest do
   end
 
   describe "opcode 9 and large number support" do
+    test "writes at a large index" do
+      program = [1001, 1, 0, 99, 99]
+      resulting = run(program)
+
+      assert ^program = Enum.slice(resulting, 0, 5)
+      assert 1 = List.last(resulting)
+      assert 100 = length(resulting)
+      assert [0] =
+        resulting
+        |> Enum.slice(5, 94)
+        |> Enum.uniq()
+    end
+
     test "matches day 9 star 1 requirement 1" do
       {:ok, acc} = Agent.start_link(fn -> [] end)
 

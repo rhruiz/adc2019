@@ -129,8 +129,9 @@ defmodule Intcode do
   def perform(99, _, _, input, _) do
     input
     |> Map.keys()
-    |> Enum.sort()
-    |> Enum.map(fn key -> Map.get(input, key) end)
+    |> Enum.max()
+    |> (fn max -> Range.new(0, max) end).()
+    |> Enum.map(fn key -> Map.get(input, key, 0) end)
   end
 
   def perform(opcode, state, address, input, opts, a, b, position) when opcode in [1, 2, 7, 8] do
