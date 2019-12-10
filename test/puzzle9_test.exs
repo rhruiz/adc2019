@@ -39,6 +39,6 @@ defmodule Puzzle9Test do
     |> Intcode.read_file()
     |> Intcode.run()
 
-    assert [78831 | []] = Agent.get(acc, fn acc -> acc end)
+    assert [78_831 | []] = Agent.get(acc, fn acc -> acc end)
   end
 end
