@@ -3,87 +3,47 @@ defmodule Puzzle10 do
   Let's play asteroids
   """
 
+  @spec from_file(Path.t()) :: map()
   def from_file(path) do
     path
     |> File.stream!()
     |> Stream.map(&String.trim/1)
     |> Stream.map(&String.split(&1, "", trim: true))
-    |> Enum.into([])
-  end
-
-  def at(map, {x, y}), do: at(map, x, y)
-
-  def at(map, x, y) do
-   map |> Enum.at(x) |> Enum.at(y)
-  end
-
-  def best_asteroid(map) do
-    best_asteroid(map, length(map), length(hd(map)))
-  end
-
-  def best_asteroid(map, rows, cols) do
-    Enum.each(0..(rows - 1), fn row ->
-      Enum.each(0..(cols - 1), fn col ->
-        at(map, row, col) |> IO.write()
-        IO.write("#{inspect {row, col}} ")
-      end)
-      IO.puts ""
+    |> Stream.with_index()
+    |> Stream.flat_map(fn {line, x} ->
+      line
+      |> Enum.with_index()
+      |> Enum.map(fn {content, y} -> {{x, y}, content} end)
     end)
-
-    best_asteroid(map, rows, cols, {0, 0}, 0)
+    |> Enum.into(%{})
   end
 
-  def best_asteroid(_map, rows, _, {rows, _}, current) do
+  @spec best_asteroid(map()) :: {{integer(), integer()}, non_neg_integer()}
+  def best_asteroid(map) do
+    best_asteroid(map, Map.to_list(map), {{0, 0}, 0})
+  end
+
+  defp best_asteroid(_map, [], current) do
     current
   end
 
-  def best_asteroid(map, rows, cols, {x, cols}, current) do
-    best_asteroid(map, rows, cols, {x + 1, 0}, current)
+  defp best_asteroid(map, [{_, "."} | tail], current) do
+    best_asteroid(map, tail, current)
   end
 
-  def best_asteroid(map, rows, cols, {x, y}, current) do
+  defp best_asteroid(map, [{{x, y}, "#"} | tail], current) do
     visibles =
-      for y2 <- 0..(cols - 1), x2 <- 0..(rows - 1), {x, y} != {x2, y2}, "#" == at(map, x, y), "#" == at(map, x2, y2) do
-        IO.puts("testing between #{inspect {x2, y2}} and #{inspect {x, y}}")
+      for {{x2, y2}, "#"} <- Map.to_list(map), {x, y} != {x2, y2} do
+        dx = x2 - x
+        dy = y2 - y
 
-        between(map, x2, y2, x, y)
-
+        :math.atan2(dy, dx)
       end
-      |> List.flatten()
-      |> IO.inspect(label: "#{inspect {x, y}} -> ")
-      |> length()
-      |> IO.inspect()
+      |> Enum.uniq()
+      |> Enum.count()
 
-    best_asteroid(map, rows, cols, {x, y + 1}, max(current, visibles))
-  end
+    max = Enum.max_by([current, {{x, y}, visibles}], &elem(&1, 1))
 
-
-  defp between(map, x, y2, x, y) do
-    Range.new(y2, y)
-    |> Enum.find([x, y2], fn
-      ^y2 -> false
-      ^y -> false
-      y -> at(map, x, y) == "#"
-    end)
-  end
-
-  defp between(map, x2, y, x, y) do
-    Range.new(x2, x)
-    |> Enum.find([x2, y], fn
-      ^x2 -> false
-      ^x -> false
-      x -> at(map, x, y) == "#"
-    end)
-  end
-
-  defp between(map, x2, y2, x, y) do
-    mid_x = x + (x2 - x)/2
-    mid_y = y + (y2 - y)/2
-
-    if floor(mid_x) == ceil(mid_x) && floor(mid_y) == ceil(mid_y) && at(map, round(mid_x), round(mid_y)) == "#" do
-      []
-    else
-      [{x2, y2}]
-    end
+    best_asteroid(map, tail, max)
   end
 end
