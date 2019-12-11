@@ -12,10 +12,10 @@ defmodule Puzzle10 do
     |> Stream.map(&String.trim/1)
     |> Stream.map(&String.split(&1, "", trim: true))
     |> Stream.with_index()
-    |> Stream.flat_map(fn {line, x} ->
+    |> Stream.flat_map(fn {line, y} ->
       line
       |> Enum.with_index()
-      |> Enum.map(fn {content, y} -> {{x, y}, content} end)
+      |> Enum.map(fn {content, x} -> {{x, y}, content} end)
     end)
     |> Enum.into(%{})
   end
@@ -31,7 +31,7 @@ defmodule Puzzle10 do
     {count, asteroid}
   end
 
-  defp vaporize(_map, _visible, _position, limit, asteroid, count) when count > limit do
+  defp vaporize(_map, _visible, _position, limit, asteroid, count) when count >= limit do
     {limit, asteroid}
   end
 
@@ -40,7 +40,7 @@ defmodule Puzzle10 do
       visibles
       |> Enum.sort_by(&elem(&1, 1))
       |> Enum.reduce({map, asteroid, count}, fn
-        _, acc = {_, _, count} when count > limit ->
+        _, acc = {_, _, count} when count >= limit ->
           acc
 
         {vap, _angle}, {map, _asteroid, count} ->
@@ -78,16 +78,20 @@ defmodule Puzzle10 do
   defp visibles(map, {x, y}), do: visibles(map, x, y)
 
   defp visibles(map, x, y) do
-    distance_from =
-      fn {x2, y2} ->
-        :math.sqrt(:math.pow(x2 - x, 2) + :math.pow(y2 - y, 2))
-      end
+    distance_from = fn {x2, y2} ->
+      :math.sqrt(:math.pow(x2 - x, 2) + :math.pow(y2 - y, 2))
+    end
 
     for {{x2, y2}, "#"} <- Map.to_list(map), {x, y} != {x2, y2} do
       dx = x2 - x
       dy = y2 - y
 
-      {{x2, y2}, :math.atan2(dy, dx)}
+      angle = fn
+        n when n < 0 -> n + 2 * :math.pi()
+        n -> n
+      end
+
+      {{x2, y2}, angle.(angle.(:math.atan2(dy, dx)) - 1.5 * :math.pi())}
     end
     |> Enum.group_by(&elem(&1, 1))
     |> Map.values()
