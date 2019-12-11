@@ -17,7 +17,7 @@ defmodule Puzzle8 do
       row
       |> Enum.map(fn
         0 -> [IO.ANSI.black_background(), " "]
-        1 -> [IO.ANSI.white_background(), " "]
+        1 -> ["❖"]
       end)
       |> IO.puts()
     end)

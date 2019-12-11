@@ -231,10 +231,11 @@ defmodule IntcodeTest do
       assert ^program = Enum.slice(resulting, 0, 5)
       assert 1 = List.last(resulting)
       assert 100 = length(resulting)
+
       assert [0] =
-        resulting
-        |> Enum.slice(5, 94)
-        |> Enum.uniq()
+               resulting
+               |> Enum.slice(5, 94)
+               |> Enum.uniq()
     end
 
     test "matches day 9 star 1 requirement 1" do
