@@ -3,12 +3,22 @@ defmodule IntcodeRunner do
   Starts a process to run a code interactive intcode program
   """
 
-  def input(amp, input) do
-    send(amp, {:input, input})
+  @type t :: pid()
+
+  def input(runner, input) do
+    send(runner, {:input, input})
   end
 
-  @spec start_link(Intcode.t(), Keyword.t()) :: pid()
-  def start_link(program, opts) do
+  @spec output(t()) :: :halted | term()
+  def output(runner) do
+    receive do
+      {:output, ^runner, output} -> output
+      {:halted, ^runner} -> :halted
+    end
+  end
+
+  @spec start_link(Intcode.t(), Keyword.t()) :: t()
+  def start_link(program, opts \\ []) do
     receiver = self()
 
     opts =
