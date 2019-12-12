@@ -22,7 +22,7 @@ defmodule Puzzle8 do
       |> IO.puts()
     end)
 
-    IO.ANSI.reset()
+    IO.puts(IO.ANSI.reset())
   end
 
   def render(input, width, height) do

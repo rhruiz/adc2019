@@ -3,45 +3,21 @@ defmodule Amp do
   Module to work with an amplifier
   """
 
+  @spec run(IntcodeRunner.t(), non_neg_integer()) :: :halt | term()
   def run(amp, input) do
-    input(amp, input)
+    IntcodeRunner.input(amp, input)
 
-    receive do
-      {:output, ^amp, content} -> content
-      {:halted, ^amp} -> :halt
+    case IntcodeRunner.output(amp) do
+      :halted -> :halt
+      other -> other
     end
   end
 
+  @spec start_link(Intcode.t(), non_neg_integer(), Keyword.t()) :: IntcodeRunner.t()
   def start_link(program, phase, opts \\ []) do
-    receiver = self()
-
-    opts =
-      Keyword.merge(
-        [
-          gets: fn _ ->
-            receive do
-              {:input, content} -> "#{content}\n"
-            end
-          end,
-          puts: fn content ->
-            send(receiver, {:output, self(), content})
-          end
-        ],
-        opts
-      )
-
-    amp =
-      spawn_link(fn ->
-        Intcode.run(program, opts)
-        send(receiver, {:halted, self()})
-      end)
-
-    input(amp, phase)
+    amp = IntcodeRunner.start_link(program, opts)
+    IntcodeRunner.input(amp, phase)
 
     amp
-  end
-
-  defp input(amp, input) do
-    send(amp, {:input, input})
   end
 end

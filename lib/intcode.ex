@@ -110,7 +110,7 @@ defmodule Intcode do
     Map.get(input, position, 0)
   end
 
-  defp read_input(input, state = %{relative_base: base}, {relative, 2}) do
+  defp read_input(input, %{relative_base: base} = state , {relative, 2}) do
     read_input(input, state, {base + relative, 0})
   end
 
