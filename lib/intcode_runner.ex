@@ -7,7 +7,7 @@ defmodule IntcodeRunner do
     send(amp, {:input, input})
   end
 
-  @spec start_link(Intcode.t(), Keyword.t) :: pid()
+  @spec start_link(Intcode.t(), Keyword.t()) :: pid()
   def start_link(program, opts) do
     receiver = self()
 
