@@ -22,14 +22,14 @@ defmodule Puzzle12 do
     potential * kinetic
   end
 
-  def step(moons, positions) do
-    step(moons, positions, stopped(moons))
-  end
-
   def stopped(moons) do
     moons
     |> Enum.zip(Stream.cycle([Vector.new()]))
     |> Map.new()
+  end
+
+  def step(moons, positions) do
+    step(moons, positions, stopped(moons))
   end
 
   def step(moons, positions, velocities) do
