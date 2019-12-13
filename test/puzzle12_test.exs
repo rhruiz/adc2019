@@ -5,6 +5,41 @@ defmodule Puzzle12Test do
 
   @moons [:io, :europa, :ganymede, :callisto]
 
+  describe "history repeats itself" do
+    test "with input data" do
+      positions =
+        @moons
+        |> Enum.zip(read_file())
+        |> Enum.into(%{})
+
+      velocities = stopped(@moons)
+
+      assert 2772 =
+        Stream.unfold({0, {positions, velocities}, MapSet.new()}, fn {counter, {p, v}, previous} ->
+          if MapSet.member?(previous, {p, v}) do
+            nil
+          else
+            {counter + 1, {counter + 1, step(@moons, p, v), MapSet.put(previous, {p, v})}}
+          end
+        end)
+        |> Enum.reduce(fn counter, _ -> IO.inspect counter end)
+    end
+
+    test "with test data" do
+      {positions, velocities} = Enum.reduce(step_through_test_input(), fn _, acc -> acc end)
+
+      assert 2772 =
+        Stream.unfold({0, {positions, velocities}, MapSet.new()}, fn {counter, {p, v}, previous} ->
+          if MapSet.member?(previous, {p, v}) do
+            nil
+          else
+            {counter + 1, {counter + 1, step(@moons, p, v), MapSet.put(previous, {p, v})}}
+          end
+        end)
+        |> Enum.reduce(fn counter, _ -> counter end)
+    end
+  end
+
   test "total energy after 1000 steps" do
     positions =
       @moons

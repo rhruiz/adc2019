@@ -23,8 +23,13 @@ defmodule Puzzle12 do
   end
 
   def step(moons, positions) do
-    velocities = Enum.zip(moons, Stream.cycle([Vector.new()]))
-    step(moons, positions, velocities)
+    step(moons, positions, stopped(moons))
+  end
+
+  def stopped(moons) do
+    moons
+    |> Enum.zip(Stream.cycle([Vector.new()]))
+    |> Map.new()
   end
 
   def step(moons, positions, velocities) do
