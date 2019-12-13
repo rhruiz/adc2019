@@ -5,52 +5,77 @@ defmodule Puzzle12Test do
 
   @moons [:io, :europa, :ganymede, :callisto]
 
+  test "total energy after 1000 steps" do
+    positions =
+      @moons
+      |> Enum.zip(read_file())
+      |> Enum.into(%{})
+
+    {positions, velocities} =
+      Enum.reduce(1..999, step(@moons, positions), fn _, {positions, velocities} ->
+        step(@moons, positions, velocities)
+      end)
+
+    assert 13_399 =
+             Enum.reduce(@moons, 0, fn moon, energy ->
+               energy + energy(positions[moon], velocities[moon])
+             end)
+  end
+
   describe "step/3" do
     test "matches start 1 requirement 1" do
-      data =
-        """
-        pos=<x=-1, y=  0, z= 2>, vel=<x= 0, y= 0, z= 0>
-        pos=<x= 2, y=-10, z=-7>, vel=<x= 0, y= 0, z= 0>
-        pos=<x= 4, y= -8, z= 8>, vel=<x= 0, y= 0, z= 0>
-        pos=<x= 3, y=  5, z=-1>, vel=<x= 0, y= 0, z= 0>
-        """
+      Enum.reduce(step_through_test_input(), fn expected, {positions, velocities} ->
+        assert ^expected = step(@moons, positions, velocities)
+      end)
+    end
+  end
 
-      {positions, velocities} =
-        data
-        |> String.trim()
-        |> String.split("\n")
-        |> Enum.map(&parse_test_data/1)
-        |> Enum.zip(@moons)
-        |> Enum.reduce({%{}, %{}}, fn {{pos, vel}, moon}, {poss, vels} ->
-          {
-            Map.put(poss, moon, pos),
-            Map.put(vels, moon, vel)
-          }
-        end)
+  describe "energy/2" do
+    test "matches first star requirement 1" do
+      {positions, velocities} = Enum.reduce(step_through_test_input(), fn a, _ -> a end)
 
-      assert {p, v} = step(@moons, positions, velocities)
-      assert {2, -1, 1} = Vector.coordinates(p.io)
-      assert {3, -7, -4} = Vector.coordinates(p.europa)
-      assert {1, -7, 5} = Vector.coordinates(p.ganymede)
-      assert {2, 2, 0} = Vector.coordinates(p.callisto)
-
-      assert {3, -1, -1} = Vector.coordinates(v.io)
-      assert {1, 3, 3} = Vector.coordinates(v.europa)
-      assert {-3, 1, -3} = Vector.coordinates(v.ganymede)
-      assert {-1, -3, 1} = Vector.coordinates(v.callisto)
+      assert 179 =
+               Enum.reduce(@moons, 0, fn moon, energy ->
+                 energy + energy(positions[moon], velocities[moon])
+               end)
     end
   end
 
   # pos=<x= 2, y=-1, z= 1>, vel=<x= 3, y=-1, z=-1>
-  def parse_test_data(<<"pos=<x=", x::binary-size(2), ", y=", y::binary-size(3), ", z=", z::binary-size(2), ">, vel=<x=", vx::binary-size(2), ", y=", vy::binary-size(2), ", z=", vz::binary-size(2), ">">>) do
+  def parse_test_data(
+        <<"pos=<x=", x::binary-size(2), ", y=", y::binary-size(3), ", z=", z::binary-size(2),
+          ">, vel=<x=", vx::binary-size(2), ", y=", vy::binary-size(2), ", z=",
+          vz::binary-size(2), ">">>
+      ) do
+    parse_test_data(x, y, z, vx, vy, vz)
+  end
+
+  def parse_test_data(
+        <<"pos=<x=", x::binary-size(2), ", y=", y::binary-size(2), ", z=", z::binary-size(2),
+          ">, vel=<x=", vx::binary-size(2), ", y=", vy::binary-size(2), ", z=",
+          vz::binary-size(2), ">">>
+      ) do
+    parse_test_data(x, y, z, vx, vy, vz)
+  end
+
+  def parse_test_data(x, y, z, vx, vy, vz) do
     i = fn x -> x |> String.trim() |> String.to_integer() end
 
     {Vector.new(i.(x), i.(y), i.(z)), Vector.new(i.(vx), i.(vy), i.(vz))}
   end
 
-  def parse_test_data(<<"pos=<x=", x::binary-size(2), ", y=", y::binary-size(2), ", z=", z::binary-size(2), ">, vel=<x=", vx::binary-size(2), ", y=", vy::binary-size(2), ", z=", vz::binary-size(2), ">">>) do
-    i = fn x -> x |> String.trim() |> String.to_integer() end
-
-    {Vector.new(i.(x), i.(y), i.(z)), Vector.new(i.(vx), i.(vy), i.(vz))}
+  def step_through_test_input do
+    "test/support/puzzle12/test_input_1.txt"
+    |> File.stream!()
+    |> Stream.map(&String.trim/1)
+    |> Stream.map(&parse_test_data/1)
+    |> Stream.zip(Stream.cycle(@moons))
+    |> Stream.map(fn {{p, v}, moon} -> {{moon, p}, {moon, v}} end)
+    |> Stream.chunk_every(4)
+    |> Stream.map(fn chunk ->
+      Enum.reduce(chunk, {%{}, %{}}, fn {{moon, p}, {moon, v}}, {pacc, vacc} ->
+        {Map.put(pacc, moon, p), Map.put(vacc, moon, v)}
+      end)
+    end)
   end
 end
