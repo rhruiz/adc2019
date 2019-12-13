@@ -24,7 +24,7 @@ defmodule IntcodeRunner do
     opts =
       Keyword.merge(
         [
-          gets: fn prompt ->
+          gets: fn _ ->
             receive do
               {:input, content} -> "#{content}\n"
             end
