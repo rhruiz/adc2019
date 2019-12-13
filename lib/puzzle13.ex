@@ -1,4 +1,8 @@
 defmodule Puzzle13 do
+  @moduledoc """
+  ~arkanoid~ game machine
+  """
+
   def blocks(screen) do
     screen
     |> Enum.reduce(0, fn
@@ -7,13 +11,18 @@ defmodule Puzzle13 do
     end)
   end
 
+  def load_game(quarters \\ 2) do
+    "test/support/puzzle13/input.txt"
+    |> Intcode.read_file()
+    |> (fn [_ | tail] ->
+          [quarters | tail]
+        end).()
+  end
+
   def game(opts \\ [], quarters \\ 2) do
     game =
-      "test/support/puzzle13/input.txt"
-      |> Intcode.read_file()
-      |> (fn [_ | tail] ->
-            [quarters | tail]
-          end).()
+      quarters
+      |> load_game()
       |> IntcodeRunner.start_link(opts)
 
     receiver(%{}, IntcodeRunner.output(game), game, 0, opts)
@@ -26,6 +35,8 @@ defmodule Puzzle13 do
   defp receiver(screen, -1, game, _score, opts) do
     0 = IntcodeRunner.output(game)
     score = IntcodeRunner.output(game)
+
+    IO.puts("score: #{score}")
 
     receiver(screen, IntcodeRunner.output(game), game, score, opts)
   end
@@ -40,7 +51,7 @@ defmodule Puzzle13 do
     |> receiver(IntcodeRunner.output(game), game, score, opts)
   end
 
-  defp render(screen, opts) do
+  def render(screen, opts) do
     renderer = opts[:renderer] || (&do_render/2)
 
     case renderer do
@@ -50,9 +61,6 @@ defmodule Puzzle13 do
   end
 
   defp do_render(screen, opts) do
-    # IO.write(IO.ANSI.clear())
-    # IO.write(IO.ANSI.cursor(0, 0))
-
     {xmax, ymax} =
       Enum.reduce(screen, {0, 0}, fn {{x, y}, _}, {xmax, ymax} ->
         {max(x, xmax), max(y, ymax)}
