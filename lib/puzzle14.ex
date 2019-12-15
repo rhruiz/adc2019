@@ -18,7 +18,7 @@ defmodule Puzzle14 do
     |> reactions()
   end
 
-  @spec reactions(String.t()) :: map()
+  @spec reactions(String.t()) :: %{element() => reaction()}
   def reactions(input) do
     input
     |> String.split("\n", trim: true)
@@ -48,9 +48,10 @@ defmodule Puzzle14 do
     {String.to_integer(q), element}
   end
 
-  def to_ore(reactions) do
+  @spec to_ore(%{element() => reaction()}, non_neg_integer()) :: non_neg_integer()
+  def to_ore(reactions, fuel \\ 1) do
     {reagents, {1, @fuel}} = reactions[@fuel]
-    to_ore(reactions, reagents, 0, %{})
+    to_ore(reactions, st(reagents, fuel), 0, %{})
   end
 
   def to_ore(_reactions, [], ore, _buffer), do: ore
@@ -79,7 +80,7 @@ defmodule Puzzle14 do
     to_ore(reactions, tail ++ st(reagents, needed_reactions), ore, buffer)
   end
 
-  def st(reagents, st) do
+  defp st(reagents, st) do
     Enum.map(reagents, fn {q, element} ->
       {q * st, element}
     end)
