@@ -15,18 +15,24 @@ defmodule Puzzle15 do
   @w 3
   @e 4
 
+  @directions [@n, @s, @w, @e]
+
   defp tile(@wall), do: "#"
   defp tile(@nothing), do: "."
   defp tile(@os), do: "O"
   defp tile(@unknown), do: "?"
 
-  def render(map, position) do
-    {xmax, xmin, ymax, ymin} =
-      Enum.reduce(map, {0, 0, 0, 0}, fn {{x, y}, _}, {xmax, xmin, ymax, ymin} ->
-        {max(x, xmax), min(x, xmin), max(y, ymax), min(y, ymin)}
-      end)
+  defp dimensions(map) do
+    Enum.reduce(map, {0, 0, 0, 0}, fn {{x, y}, _}, {xmax, xmin, ymax, ymin} ->
+      {max(x, xmax), min(x, xmin), max(y, ymax), min(y, ymin)}
+    end)
+  end
 
-    Enum.each(ymin..ymax, fn y ->
+  def render(map, position) do
+    {xmax, xmin, ymax, ymin} = dimensions(map)
+    # IO.puts(IO.ANSI.clear())
+
+    Enum.flat_map(ymin..ymax, fn y ->
       Enum.map(xmin..xmax, fn x ->
         case {x, y} do
           ^position -> "D"
@@ -34,8 +40,19 @@ defmodule Puzzle15 do
           _ -> map |> Map.get({x, y}, @unknown) |> tile()
         end
       end)
-      |> IO.puts()
+      |> Stream.concat(["\n"])
     end)
+    |> IO.puts()
+
+    Process.sleep(10)
+  end
+
+  defp next_move(map, position) do
+    {position,
+      Enum.find(@directions, fn direction ->
+        !Map.has_key?(map, moved(position, direction))
+      end)
+    }
   end
 
   @spec find_oxygen_system(Intcode.t()) :: {map(), position()}
@@ -43,43 +60,61 @@ defmodule Puzzle15 do
     droid = IntcodeRunner.start_link(program)
 
     position = {0, 0}
-    find_oxygen_system(droid, [position], %{})
+    map = %{position => @nothing}
+    next = next_move(map, position)
+    find_oxygen_system(droid, next, map, [])
   end
 
-  defp at(map, position), do: Map.get(map, position, @unknown)
-
-  def find_oxygen_system(_droid, [], map) do
+  defp backtrack(_droid, position, map, []) do
+    render(map, position)
     map
   end
 
-  def find_oxygen_system(droid, [position | queue], map) do
-    IO.inspect(position, label: "testing")
+  defp backtrack(droid, position, map, [fallback | fb]) do
+    render(map, position)
 
-    {new_map, queue} =
-      directions()
-      |> Enum.reduce({map, queue}, fn direction, {map, queue} ->
-        new_position = moved(position, direction)
+    case next_move(map, position) do
+      {_, nil} ->
+        {new_position, _found, new_map} = move(droid, position, reverse(fallback), map)
+        IO.puts "no options out of #{inspect position}, backtrack back using #{reverse(fallback)}"
+        backtrack(droid, new_position, new_map, fb)
 
-        if at(map, new_position) == @unknown do
-          case move(droid, position, direction, map) do
-            {^position, @wall, new_map} ->
-              {new_map, queue}
-
-            {new_position, _found, new_map} ->
-              {^position, _, _} = move(droid, new_position, reverse(direction), new_map)
-              {new_map, [new_position | queue]}
-          end
-        else
-          {map, queue}
-        end
-      end)
-
-    find_oxygen_system(droid, queue, new_map)
+      movement ->
+        IO.puts("moving to #{inspect movement}")
+        find_oxygen_system(droid, movement, map, fb)
+    end
   end
 
-  defp directions, do: [@n, @s, @w, @e]
+  def find_oxygen_system(droid, {position, nil}, map, fallback) do
+    render(map, position)
+    backtrack(droid, position, map, fallback)
+  end
 
-  def move(droid, position, direction, map) when direction in [@n, @s, @w, @e]  do
+  # def find_oxygen_system(droid, {position, nil}, map, fallback) do
+  #   IO.puts("using random fallback to leave #{inspect position}")
+  #   {xmax, xmin, ymax, ymin} = dimensions(map)
+
+  #   continue = abs(xmax - xmin) < 41 || abs(ymax - ymin) < 41 || !Enum.find(false, map, fn
+  #     {_, @os} -> true
+  #     _ -> false
+  #   end)
+
+  #   continue(continue, droid, {position, Enum.random(@directions)}, map, fallback)
+  # end
+
+  def find_oxygen_system(droid, {position, direction}, map, fallback) do
+    render(map, position)
+
+    case move(droid, position, direction, map) do
+      {^position, _found, new_map} ->
+        find_oxygen_system(droid, next_move(new_map, position), new_map, fallback)
+
+      {new_position, _found, new_map} ->
+        find_oxygen_system(droid, next_move(new_map, new_position), new_map, [direction | fallback])
+    end
+  end
+
+  def move(droid, position, direction, map) when direction in @directions do
     IntcodeRunner.input(droid, direction)
     new_position = moved(position, direction)
 
