@@ -94,14 +94,14 @@ defmodule Puzzle16Test do
     @tag timeout: :timer.minutes(2)
     test "from input" do
       assert 11833188 =
-        "test/support/puzzle16/input.txt"
-        |> File.read!()
-        |> String.trim()
-        |> String.split("", trim: true)
-        |> Enum.map(&String.to_integer/1)
-        |> fft(100)
-        |> Enum.take(8)
-        |> Integer.undigits()
+          "test/support/puzzle16/input.txt"
+          |> File.read!()
+          |> String.trim()
+          |> String.split("", trim: true)
+          |> Enum.map(&String.to_integer/1)
+          |> fft(100)
+          |> Enum.take(8)
+          |> Integer.undigits()
     end
   end
 

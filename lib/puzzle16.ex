@@ -28,11 +28,23 @@ defmodule Puzzle16 do
       |> Enum.reduce(0, fn {n, pattern}, sum ->
         sum + n * pattern
       end)
-      |> Integer.digits()
-      |> List.last()
       |> abs()
+      |> rem(10)
     end)
-    |> Enum.take(length(input))
+    |> Enum.into([])
+  end
+
+  def do_phases(input, 0), do: input
+  def do_phases(input, phases) do
+    Enum.reduce(1..phases, input, fn _phase, input ->
+      input
+      |> Enum.reverse()
+      |> Enum.reduce({0, []}, fn element, {sum, acc} ->
+        sum = sum + element
+        {sum, [rem(sum, 10) | acc]}
+      end)
+      |> elem(1)
+    end)
   end
 
   @spec message_offset([integer()]) :: [integer()]
@@ -43,7 +55,7 @@ defmodule Puzzle16 do
       |> Integer.undigits()
 
     input
-    |> fft(100)
+    |> do_phases(100)
     |> Enum.slice(offset, 8)
   end
 end
