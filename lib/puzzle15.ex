@@ -36,7 +36,7 @@ defmodule Puzzle15 do
     end)
   end
 
-  if Mix.env == :test do
+  if Mix.env() == :test do
     def render(map, _position), do: map
   else
     @unknown -1
@@ -50,16 +50,14 @@ defmodule Puzzle15 do
       {xmax, xmin, ymax, ymin} = dimensions(map)
       IO.puts(IO.ANSI.clear())
 
-      Enum.flat_map(ymin..ymax, fn y ->
-        Enum.map(xmin..xmax, fn x ->
-          case {x, y} do
-            ^position -> "D"
-            {0, 0} -> "X"
-            _ -> map |> Map.get({x, y}, @unknown) |> tile()
-          end
-        end)
-        |> Stream.concat(["\n"])
-      end)
+      for y <- ymin..ymax, x <- xmin..xmax do
+        case {x, y} do
+          ^position -> "D"
+          {0, 0} -> "X"
+          {^xmax, _} = pos -> [Map.get(map, pos, @unknown) |> tile(), "\n"]
+          _ -> map |> Map.get({x, y}, @unknown) |> tile()
+        end
+      end
       |> IO.puts()
 
       Process.sleep(5)

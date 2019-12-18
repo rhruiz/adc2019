@@ -1,5 +1,5 @@
 defmodule Puzzle15.Solver do
-  @doc """
+  @moduledoc """
   Solves the given %Maze{} using a breadth-first algorithm
   Returns the shortest route as a list of directions
   """
@@ -9,8 +9,8 @@ defmodule Puzzle15.Solver do
   def shortest_route(maze) do
     shortest_route(
       maze,
-      :queue.in({maze.start_point, []}, :queue.new),
-      MapSet.new
+      :queue.in({maze.start_point, []}, :queue.new()),
+      MapSet.new()
     )
   end
 
