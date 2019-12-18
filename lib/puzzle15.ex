@@ -8,7 +8,6 @@ defmodule Puzzle15 do
   @wall 0
   @nothing 1
   @os 2
-  @unknown -1
 
   @n 1
   @s 2
@@ -31,34 +30,40 @@ defmodule Puzzle15 do
     @e => @n
   }
 
-  defp tile(@wall), do: "#"
-  defp tile(@nothing), do: "."
-  defp tile(@os), do: "O"
-  defp tile(@unknown), do: "?"
-
-  defp dimensions(map) do
+  def dimensions(map) do
     Enum.reduce(map, {0, 0, 0, 0}, fn {{x, y}, _}, {xmax, xmin, ymax, ymin} ->
       {max(x, xmax), min(x, xmin), max(y, ymax), min(y, ymin)}
     end)
   end
 
-  def render(map, position) do
-    {xmax, xmin, ymax, ymin} = dimensions(map)
-    IO.puts(IO.ANSI.clear())
+  if Mix.env == :test do
+    def render(map, _position), do: map
+  else
+    @unknown -1
 
-    Enum.flat_map(ymin..ymax, fn y ->
-      Enum.map(xmin..xmax, fn x ->
-        case {x, y} do
-          ^position -> "D"
-          {0, 0} -> "X"
-          _ -> map |> Map.get({x, y}, @unknown) |> tile()
-        end
+    defp tile(@wall), do: "#"
+    defp tile(@nothing), do: "."
+    defp tile(@os), do: "O"
+    defp tile(@unknown), do: "?"
+
+    def render(map, position) do
+      {xmax, xmin, ymax, ymin} = dimensions(map)
+      IO.puts(IO.ANSI.clear())
+
+      Enum.flat_map(ymin..ymax, fn y ->
+        Enum.map(xmin..xmax, fn x ->
+          case {x, y} do
+            ^position -> "D"
+            {0, 0} -> "X"
+            _ -> map |> Map.get({x, y}, @unknown) |> tile()
+          end
+        end)
+        |> Stream.concat(["\n"])
       end)
-      |> Stream.concat(["\n"])
-    end)
-    |> IO.puts()
+      |> IO.puts()
 
-    Process.sleep(5)
+      Process.sleep(5)
+    end
   end
 
   @spec find_oxygen_system(Intcode.t()) :: {map(), position()}
