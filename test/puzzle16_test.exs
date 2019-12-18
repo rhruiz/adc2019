@@ -106,6 +106,7 @@ defmodule Puzzle16Test do
   end
 
   describe "message_offset/2" do
+    @tag timeout: :timer.minutes(2)
     test "star 2 requirement 1" do
       assert 84462026 =
         "03036732577212944063491565474664"
@@ -113,16 +114,24 @@ defmodule Puzzle16Test do
         |> message_offset()
         |> Integer.undigits()
     end
+
+    @tag timeout: :timer.hours(2)
+    test "with input file" do
+      assert 55005000 =
+        "test/support/puzzle16/input.txt"
+        |> File.read!()
+        |> String.trim()
+        |> digits_repeated(10_000)
+        |> message_offset()
+        |> Integer.undigits()
+    end
   end
 
   def digits_repeated(str, repeats) do
-    digits =
-      str
-      |> String.split("", trim: true)
-      |> Enum.map(&String.to_integer/1)
-
-    Enum.flat_map(1..repeats, fn _ ->
-      digits
-    end)
+    str
+    |> String.split("", trim: true)
+    |> Enum.map(&String.to_integer/1)
+    |> List.duplicate(repeats)
+    |> List.flatten()
   end
 end

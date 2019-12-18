@@ -13,8 +13,7 @@ defmodule Puzzle16 do
 
   @spec fft([integer()], integer()) :: [integer()]
   def fft(input, phases) do
-    Enum.reduce(1..phases, input, fn phase, input ->
-      IO.inspect(phase, label: "phase")
+    Enum.reduce(1..phases, input, fn _phase, input ->
       fft(input)
     end)
   end
@@ -45,7 +44,6 @@ defmodule Puzzle16 do
 
     input
     |> fft(100)
-    |> IO.inspect()
     |> Enum.slice(offset, 8)
   end
 end
