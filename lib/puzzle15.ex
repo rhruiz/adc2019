@@ -17,6 +17,20 @@ defmodule Puzzle15 do
 
   @directions [@n, @s, @w, @e]
 
+  @clockwise %{
+    @n => @e,
+    @e => @s,
+    @s => @w,
+    @w => @n
+  }
+
+  @counterclock %{
+    @n => @w,
+    @w => @s,
+    @s => @e,
+    @e => @n
+  }
+
   defp tile(@wall), do: "#"
   defp tile(@nothing), do: "."
   defp tile(@os), do: "O"
@@ -30,7 +44,7 @@ defmodule Puzzle15 do
 
   def render(map, position) do
     {xmax, xmin, ymax, ymin} = dimensions(map)
-    # IO.puts(IO.ANSI.clear())
+    IO.puts(IO.ANSI.clear())
 
     Enum.flat_map(ymin..ymax, fn y ->
       Enum.map(xmin..xmax, fn x ->
@@ -44,15 +58,7 @@ defmodule Puzzle15 do
     end)
     |> IO.puts()
 
-    Process.sleep(10)
-  end
-
-  defp next_move(map, position) do
-    {position,
-      Enum.find(@directions, fn direction ->
-        !Map.has_key?(map, moved(position, direction))
-      end)
-    }
+    Process.sleep(5)
   end
 
   @spec find_oxygen_system(Intcode.t()) :: {map(), position()}
@@ -61,56 +67,23 @@ defmodule Puzzle15 do
 
     position = {0, 0}
     map = %{position => @nothing}
-    next = next_move(map, position)
-    find_oxygen_system(droid, next, map, [])
+    next = @clockwise[@n]
+    find_oxygen_system(droid, {position, next}, map)
   end
 
-  defp backtrack(_droid, position, map, []) do
-    render(map, position)
+  def find_oxygen_system(_droid, {{0, 0}, @s}, map) do
     map
   end
 
-  defp backtrack(droid, position, map, [fallback | fb]) do
-    render(map, position)
-
-    case next_move(map, position) do
-      {_, nil} ->
-        {new_position, _found, new_map} = move(droid, position, reverse(fallback), map)
-        IO.puts "no options out of #{inspect position}, backtrack back using #{reverse(fallback)}"
-        backtrack(droid, new_position, new_map, fb)
-
-      movement ->
-        IO.puts("moving to #{inspect movement}")
-        find_oxygen_system(droid, movement, map, fb)
-    end
-  end
-
-  def find_oxygen_system(droid, {position, nil}, map, fallback) do
-    render(map, position)
-    backtrack(droid, position, map, fallback)
-  end
-
-  # def find_oxygen_system(droid, {position, nil}, map, fallback) do
-  #   IO.puts("using random fallback to leave #{inspect position}")
-  #   {xmax, xmin, ymax, ymin} = dimensions(map)
-
-  #   continue = abs(xmax - xmin) < 41 || abs(ymax - ymin) < 41 || !Enum.find(false, map, fn
-  #     {_, @os} -> true
-  #     _ -> false
-  #   end)
-
-  #   continue(continue, droid, {position, Enum.random(@directions)}, map, fallback)
-  # end
-
-  def find_oxygen_system(droid, {position, direction}, map, fallback) do
+  def find_oxygen_system(droid, {position, direction}, map) do
     render(map, position)
 
     case move(droid, position, direction, map) do
-      {^position, _found, new_map} ->
-        find_oxygen_system(droid, next_move(new_map, position), new_map, fallback)
+      {^position, @wall, new_map} ->
+        find_oxygen_system(droid, {position, @counterclock[direction]}, new_map)
 
       {new_position, _found, new_map} ->
-        find_oxygen_system(droid, next_move(new_map, new_position), new_map, [direction | fallback])
+        find_oxygen_system(droid, {new_position, @clockwise[direction]}, new_map)
     end
   end
 
@@ -137,11 +110,6 @@ defmodule Puzzle15 do
   defp moved(position, direction) do
     moved(position, to_movement(direction))
   end
-
-  defp reverse(@n), do: @s
-  defp reverse(@s), do: @n
-  defp reverse(@w), do: @e
-  defp reverse(@e), do: @w
 
   defp to_movement(@n), do: {0, -1}
   defp to_movement(@s), do: {0, 1}
