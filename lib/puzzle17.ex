@@ -6,10 +6,11 @@ defmodule Puzzle17 do
   @scaffold ?#
   @space ?.
 
-  def from_input do
+  def from_input(patch \\ 1) do
     ascii =
       "test/support/puzzle17/input.txt"
       |> Intcode.read_file()
+      |> (fn [_head | code] -> [patch | code] end).()
       |> IntcodeRunner.start_link()
 
     ascii
@@ -18,7 +19,13 @@ defmodule Puzzle17 do
       :halted -> nil
       char -> {char, IntcodeRunner.output(ascii)}
     end)
-    |> to_map()
+  end
+
+  def read_line(ascii, buffer \\ []) do
+    case IntcodeRunner.output(ascii) do
+      10 -> Enum.reverse(buffer)
+      code -> read_line(ascii, [code | buffer])
+    end
   end
 
   def to_map(charlist) do
@@ -54,4 +61,11 @@ defmodule Puzzle17 do
       {x, y + 1}
     ]
   end
+
+  # solution
+  # R12, L10, L10, L6, L12, R12, L4, R12, L10, L10, L6, L12, R12, L4, L12, R12, L6, L6, L12, R12, L4, L12, R12, L6, R12, L10, L10, L12, R12, L6, L12, R12, L6
+  # a = R12, L10, L10
+  # b = L6, L12, R12, L4
+  # c = L12, R12, L6
+  # A, B, A, B, C, B, C, A, C, C
 end
