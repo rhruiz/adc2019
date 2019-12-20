@@ -19,6 +19,53 @@ defmodule Puzzle17 do
       :halted -> nil
       char -> {char, IntcodeRunner.output(ascii)}
     end)
+    |> to_map()
+  end
+
+  def from_input(main_program, a, b, c, visual \\ false) do
+    ascii =
+      "test/support/puzzle17/input.txt"
+      |> Intcode.read_file()
+      |> (fn [_head | code] -> [2 | code] end).()
+      |> IntcodeRunner.start_link()
+
+    Enum.each(0..60, fn _ ->
+      read_line(ascii)
+    end)
+
+    write_line(ascii, main_program)
+
+    read_line(ascii)
+    write_line(ascii, a)
+
+    read_line(ascii)
+    write_line(ascii, b)
+
+    read_line(ascii)
+    write_line(ascii, c)
+
+    read_line(ascii)
+    write_line(ascii, if(visual, do: "y", else: "n"))
+
+    read_line(ascii)
+
+    ascii
+    |> IntcodeRunner.output()
+    |> Stream.unfold(fn
+      :halted -> nil
+      char -> {char, IntcodeRunner.output(ascii)}
+    end)
+  end
+
+  def write_line(ascii, content) do
+    content
+    |> String.replace(" ", "")
+    |> to_charlist()
+    |> Kernel.++([?\n])
+    |> Enum.reduce(nil, fn char, _acc ->
+      IntcodeRunner.input(ascii, char)
+      :ok
+    end)
   end
 
   def read_line(ascii, buffer \\ []) do
@@ -45,12 +92,17 @@ defmodule Puzzle17 do
     map
     |> Enum.reduce([], fn {{x, y}, _chr}, acc ->
       cond do
-        Map.get(map, {x, y}, @space) != @scaffold -> acc
-        Enum.all?(neighbors(x, y), fn {x, y} -> Map.get(map, {x, y}, @space) != @space end) -> [{x, y} | acc]
-        true -> acc
+        Map.get(map, {x, y}, @space) != @scaffold ->
+          acc
+
+        Enum.all?(neighbors(x, y), fn {x, y} -> Map.get(map, {x, y}, @space) != @space end) ->
+          [{x, y} | acc]
+
+        true ->
+          acc
       end
     end)
-    |> Enum.reduce(0, fn {x, y},  sum -> sum + x * y end)
+    |> Enum.reduce(0, fn {x, y}, sum -> sum + x * y end)
   end
 
   defp neighbors(x, y) do
@@ -63,9 +115,11 @@ defmodule Puzzle17 do
   end
 
   # solution
-  # R12, L10, L10, L6, L12, R12, L4, R12, L10, L10, L6, L12, R12, L4, L12, R12, L6, L6, L12, R12, L4, L12, R12, L6, R12, L10, L10, L12, R12, L6, L12, R12, L6
+  # R12, L10, L10, L6, L12, R12, L4, R12, L10, L10, L6, L12, R12, L4, L12, R12, \
+  # L6, L6, L12, R12, L4, L12, R12, L6, R12, L10, L10, L12, R12, L6, L12, R12, L6
+  #
+  # main A, B, A, B, C, B, C, A, C, C
   # a = R12, L10, L10
   # b = L6, L12, R12, L4
   # c = L12, R12, L6
-  # A, B, A, B, C, B, C, A, C, C
 end
