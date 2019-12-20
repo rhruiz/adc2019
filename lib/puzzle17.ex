@@ -61,11 +61,12 @@ defmodule Puzzle17 do
     content
     |> String.replace(" ", "")
     |> to_charlist()
-    |> Kernel.++([?\n])
     |> Enum.reduce(nil, fn char, _acc ->
       IntcodeRunner.input(ascii, char)
       :ok
     end)
+
+    IntcodeRunner.input(ascii, ?\n)
   end
 
   def read_line(ascii, buffer \\ []) do
