@@ -14,23 +14,36 @@ defmodule Puzzle17 do
       |> IntcodeRunner.start_link()
 
     ascii
-    |> IntcodeRunner.output()
+    |> output()
     |> Stream.unfold(fn
       :halted -> nil
-      char -> {char, IntcodeRunner.output(ascii)}
+      char -> {char, output(ascii)}
     end)
     |> to_map()
   end
 
   def from_input(main_program, a, b, c, visual \\ false) do
+    me = self()
+
+    opts = [
+      gets: fn _prompt ->
+        send(me, {:cancel_output, self()})
+
+        receive do
+          {:input, content} -> "#{content}\n"
+        end
+      end,
+    ]
+
     ascii =
       "test/support/puzzle17/input.txt"
       |> Intcode.read_file()
       |> (fn [_head | code] -> [2 | code] end).()
-      |> IntcodeRunner.start_link()
+      |> IntcodeRunner.start_link(opts)
 
-    Enum.each(0..60, fn _ ->
-      read_line(ascii)
+    Stream.unfold(output(ascii), fn
+      nil -> nil
+      other -> {other, output(ascii)}
     end)
 
     write_line(ascii, main_program)
@@ -50,11 +63,19 @@ defmodule Puzzle17 do
     read_line(ascii)
 
     ascii
-    |> IntcodeRunner.output()
+    |> output()
     |> Stream.unfold(fn
       :halted -> nil
       char -> {char, IntcodeRunner.output(ascii)}
     end)
+  end
+
+  def output(ascii) do
+    receive do
+      {:cancel_output, ^ascii} -> nil
+      {:output, ^ascii, output} -> output
+      {:halted, ^ascii} -> :halted
+    end
   end
 
   def write_line(ascii, content) do
@@ -70,7 +91,7 @@ defmodule Puzzle17 do
   end
 
   def read_line(ascii, buffer \\ []) do
-    case IntcodeRunner.output(ascii) do
+    case output(ascii) do
       10 -> Enum.reverse(buffer)
       code -> read_line(ascii, [code | buffer])
     end
