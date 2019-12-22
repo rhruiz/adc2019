@@ -8,14 +8,16 @@ defmodule Puzzle15.Maze do
     height: 0,
     start_point: {0, 0},
     exit_point: {0, 0},
-    points: %{}
+    points: %{},
+    unknown: -1,
+    wall: 0
   )
 
   def wall?(%__MODULE__{width: width}, {x, _}) when x < 0 or width <= x, do: true
   def wall?(%__MODULE__{height: height}, {_, y}) when y < 0 or height <= y, do: true
 
   def wall?(maze, point) do
-    Map.get(maze.points, point, 0) in [0, -1]
+    Map.get(maze.points, point, maze.wall) in [maze.wall, maze.unknown]
   end
 
   def new(points) do
