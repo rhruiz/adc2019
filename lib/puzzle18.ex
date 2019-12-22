@@ -33,20 +33,45 @@ defmodule Puzzle18 do
 
   @spec shortest_path(map(), MapSet.t()) :: integer()
   def shortest_path(maze, all_keys) do
-    start_position =
-      Enum.find_value(maze, fn
-        {pos, "@"} -> pos
-        _ -> false
+    start_positions =
+      Enum.flat_map(maze, fn
+        {pos, "@"} -> [pos]
+        _ -> []
       end)
 
-    visited = MapSet.new([{start_position, MapSet.new()}])
-    queue = :queue.from_list([{start_position, 0, MapSet.new()}])
+    visited = Enum.reduce(start_positions, MapSet.new(), fn pos, acc -> MapSet.put(acc, [{pos, MapSet.new()}]) end)
+
+    queue =
+      if length(start_positions) > 1 do
+        start_positions
+        |> Enum.map(fn pos -> {pos, start_positions -- [pos], 0, MapSet.new()} end)
+        |> :queue.from_list()
+      else
+        start_positions
+        |> Enum.map(fn pos -> {pos, 0, MapSet.new()} end)
+        |> :queue.from_list()
+      end
 
     shortest_path(maze, :queue.out(queue), visited, all_keys)
   end
 
-  defp shortest_path(_maze, {{:value, {_position, length, keys}}, _queue}, _, keys) do
+  defp shortest_path(_maze, {{:value, {_position, length, keys}}, _}, _, keys) do
     length
+  end
+
+  defp shortest_path(_maze, {{:value, {_position, _rest, length, keys}}, _}, _, keys) do
+    length
+  end
+
+  defp shortest_path(maze, {{:value, {position, rest, length, keys}}, queue}, visited, all_keys) do
+    {visited, queue} =
+      maze
+      |> neighbors(position)
+      |> Enum.reduce({visited, queue}, fn neighbor, {visited, queue} ->
+        visit(neighbor, Map.get(maze, neighbor), rest, keys, length, visited, queue)
+      end)
+
+    shortest_path(maze, :queue.out(queue), visited, all_keys)
   end
 
   defp shortest_path(maze, {{:value, {position, length, keys}}, queue}, visited, all_keys) do
@@ -58,6 +83,47 @@ defmodule Puzzle18 do
       end)
 
     shortest_path(maze, :queue.out(queue), visited, all_keys)
+  end
+
+  defp visit(position, value, rest, keys, length, visited, queue) do
+    cond do
+      {position, keys} in visited ->
+        {visited, queue}
+
+
+      value in @all_doors and key(value) not in keys ->
+        {visited, queue}
+
+      true ->
+        keys = add_key(keys, value)
+        multi_move(keys, visited, queue, position, rest, length)
+    end
+  end
+
+  defp multi_move(keys, visited, queue, position, rest, length) do
+    all = [position | rest]
+
+    all
+    |> Enum.with_index()
+    |> Enum.reduce({visited, queue}, fn
+      {pos, 0}, {visited, queue} ->
+        if {pos, keys} not in visited do
+          [^pos | rest] = all
+          {MapSet.put(visited, {pos, keys}), :queue.in({pos, rest, length + 1, keys}, queue)}
+        else
+          {visited, queue}
+        end
+
+      {pos, idx}, {visited, queue} ->
+        if {pos, keys} not in visited do
+          {left, [^pos | tr]} = Enum.split(rest, idx - 1)
+          rest = left ++ [position] ++ tr
+
+          {MapSet.put(visited, {pos, keys}), :queue.in({pos, rest, length + 1, keys}, queue)}
+        else
+          {visited, queue}
+        end
+    end)
   end
 
   defp visit(position, value, keys, length, visited, queue) do

@@ -57,5 +57,41 @@ defmodule Puzzle18Test do
                      shortest_path(map, keys)
                    end).()
     end
+
+    test "star 2 requirement 1" do
+      assert 8 =
+               "test/support/puzzle18/test_input_2_1.txt"
+               |> read_file()
+               |> (fn {map, keys} ->
+                     shortest_path(map, keys)
+                   end).()
+    end
+
+    test "star 2 requirement 2" do
+      assert 24 =
+               "test/support/puzzle18/test_input_2_2.txt"
+               |> read_file()
+               |> (fn {map, keys} ->
+                     shortest_path(map, keys)
+                   end).()
+    end
+
+    test "star 2 requirement 3" do
+      assert 32 =
+               "test/support/puzzle18/test_input_2_3.txt"
+               |> read_file()
+               |> (fn {map, keys} ->
+                     shortest_path(map, keys)
+                   end).()
+    end
+
+    test "star 2 requirement 4" do
+      assert 72 =
+               "test/support/puzzle18/test_input_2_4.txt"
+               |> read_file()
+               |> (fn {map, keys} ->
+                     shortest_path(map, keys)
+                   end).()
+    end
   end
 end
