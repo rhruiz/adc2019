@@ -10,4 +10,12 @@ defmodule Puzzle20Test do
              |> shortest_path()
              |> length()
   end
+
+  test "computes shortest path on recursive maze" do
+    assert 5754 =
+             "test/support/puzzle20/input.txt"
+             |> read_file()
+             |> shortest_path(&level_change/2)
+             |> length()
+  end
 end
