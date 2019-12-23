@@ -32,7 +32,7 @@ defmodule Puzzle17 do
         receive do
           {:input, content} -> "#{content}\n"
         end
-      end,
+      end
     ]
 
     ascii =
@@ -79,13 +79,14 @@ defmodule Puzzle17 do
   end
 
   def write_line(ascii, content) do
-    content
-    |> String.replace(" ", "")
-    |> to_charlist()
-    |> Enum.reduce(nil, fn char, _acc ->
-      IntcodeRunner.input(ascii, char)
-      :ok
-    end)
+    :ok =
+      content
+      |> String.replace(" ", "")
+      |> to_charlist()
+      |> Enum.reduce(nil, fn char, _acc ->
+        IntcodeRunner.input(ascii, char)
+        :ok
+      end)
 
     IntcodeRunner.input(ascii, ?\n)
   end
