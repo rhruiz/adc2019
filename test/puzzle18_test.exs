@@ -93,5 +93,14 @@ defmodule Puzzle18Test do
                      shortest_path(map, keys)
                    end).()
     end
+
+    test "star 2 from input" do
+      assert 1692 =
+               "test/support/puzzle18/input_2.txt"
+               |> read_file()
+               |> (fn {map, keys} ->
+                     shortest_path(map, keys)
+                   end).()
+    end
   end
 end

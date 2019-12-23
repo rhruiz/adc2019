@@ -90,7 +90,6 @@ defmodule Puzzle18 do
       {position, keys} in visited ->
         {visited, queue}
 
-
       value in @all_doors and key(value) not in keys ->
         {visited, queue}
 
@@ -108,7 +107,6 @@ defmodule Puzzle18 do
     |> Enum.reduce({visited, queue}, fn
       {pos, 0}, {visited, queue} ->
         if {pos, keys} not in visited do
-          [^pos | rest] = all
           {MapSet.put(visited, {pos, keys}), :queue.in({pos, rest, length + 1, keys}, queue)}
         else
           {visited, queue}
