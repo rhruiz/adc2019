@@ -4,7 +4,6 @@ defmodule Puzzle19 do
   """
 
   def scan(program) do
-
     map =
       Enum.reduce(0..49, %{}, fn x, map ->
         Enum.reduce(0..49, map, fn y, map ->

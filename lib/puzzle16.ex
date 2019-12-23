@@ -1,4 +1,8 @@
 defmodule Puzzle16 do
+  @moduledoc """
+  FFTs. Not what you were thinking.
+  """
+
   @base_pattern [0, 1, 0, -1]
 
   @spec repeating_pattern(integer()) :: Stream.t()
@@ -6,7 +10,7 @@ defmodule Puzzle16 do
     @base_pattern
     |> Stream.cycle()
     |> Stream.flat_map(fn element ->
-      Stream.map(1..(index+1), fn _  -> element end)
+      Stream.map(1..(index + 1), fn _ -> element end)
     end)
     |> Stream.drop(1)
   end
@@ -35,6 +39,7 @@ defmodule Puzzle16 do
   end
 
   def do_phases(input, 0), do: input
+
   def do_phases(input, phases) do
     Enum.reduce(1..phases, input, fn _phase, input ->
       input

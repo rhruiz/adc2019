@@ -5,8 +5,8 @@ defmodule Puzzle19Test do
 
   describe "scan/1" do
     assert 164 =
-      "test/support/puzzle19/input.txt"
-      |> Intcode.read_file()
-      |> scan()
+             "test/support/puzzle19/input.txt"
+             |> Intcode.read_file()
+             |> scan()
   end
 end
