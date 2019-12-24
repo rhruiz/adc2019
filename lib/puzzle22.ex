@@ -3,10 +3,26 @@ defmodule Puzzle22 do
   Card tricks
   """
 
+  def reverse(:cut, [length, index, at]) do
+    rem(index + at, length)
+  end
+
+  def reverse(:deal_with_increment, [_length, 0, _increment]) do
+    0
+  end
+
+  def reverse(:deal_with_increment, [length, index, increment]) do
+    length - rem(increment * index, length)
+  end
+
+  def reverse(:deal_into_new_stack, [length, index]) do
+    length - 1 - index
+  end
+
   def deal_into_new_stack(cards), do: Enum.reverse(cards)
 
-  def cut(cards, index) do
-    {left, right} = Enum.split(cards, index)
+  def cut(cards, at) do
+    {left, right} = Enum.split(cards, at)
     right ++ left
   end
 
