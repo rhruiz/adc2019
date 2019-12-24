@@ -2,17 +2,32 @@ defmodule Puzzle22Test do
   use ExUnit.Case, async: true
 
   import Puzzle22
+  import SpaceMath, only: [inversemod: 2]
 
   describe "compress/3" do
     test "from large repeated input" do
       length = 119_315_717_514_047
       iteractions = 101_741_582_076_661
 
-      assert 96_196_710_942_473 =
-               "test/support/puzzle22/input.txt"
-               |> from_input()
-               |> Enum.into([])
-               |> Puzzle22.compress(length, iteractions)
+      {a, b} =
+        "test/support/puzzle22/input.txt"
+        |> from_input()
+        |> Enum.into([])
+        |> compress(length, iteractions)
+
+      assert 96_196_710_942_473 = Integer.mod(Integer.mod(2020 - b, length) * inversemod(a, length), length)
+    end
+
+    test "star 1 from input" do
+      length = 10_007
+
+      {a, b} =
+        "test/support/puzzle22/input.txt"
+        |> from_input()
+        |> Enum.into([])
+        |> compress(length, 1)
+
+      assert 1538 = Integer.mod(a * 2019 + b, length)
     end
   end
 
@@ -93,15 +108,6 @@ defmodule Puzzle22Test do
                |> deal_with_increment(9)
                |> deal_with_increment(3)
                |> cut(-1)
-    end
-
-    test "star 1 from input" do
-      shuffles = from_input("test/support/puzzle22/input.txt")
-
-      assert 1538 =
-               0..10_006
-               |> apply_shuffles(shuffles)
-               |> Enum.find_index(fn card -> card == 2019 end)
     end
   end
 end

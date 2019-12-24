@@ -24,7 +24,7 @@ defmodule Puzzle22 do
     res_b =
       b * (modpow(a, iterations, length) - 1) * Integer.mod(inversemod(a - 1, length), length)
 
-    Integer.mod(Integer.mod(2020 - res_b, length) * inversemod(res_a, length), length)
+    {res_a, res_b}
   end
 
   def deal_into_new_stack(cards), do: Enum.reverse(cards)
