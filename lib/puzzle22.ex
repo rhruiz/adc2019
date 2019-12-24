@@ -3,6 +3,28 @@ defmodule Puzzle22 do
   Card tricks
   """
 
+  import SpaceMath, only: [inversemod: 2, modpow: 3]
+
+  def compress(steps, length, iterations) do
+    {a, b} =
+      Enum.reduce(steps, {1, 0}, fn
+        {__MODULE__, :cut, [at]}, {a, b} ->
+          b = length + b - at
+          {a, b}
+
+        {__MODULE__, :deal_with_increment, [increment]}, {a, b} ->
+          {a * increment, b * increment}
+
+        {__MODULE__, :deal_into_new_stack, []}, {a, b} ->
+          {a * -1, length - b - 1}
+      end)
+
+    a = modpow(a, iterations, length)
+    b = b * (modpow(a, iterations, length) - 1) * Integer.mod(inversemod(a - 1, length), length)
+
+    Integer.mod(Integer.mod((2020 - b), length) * inversemod(a, length), length)
+  end
+
   def reverse(:cut, [length, index, at]) do
     rem(index + at, length)
   end

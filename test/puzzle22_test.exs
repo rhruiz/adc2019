@@ -3,6 +3,21 @@ defmodule Puzzle22Test do
 
   import Puzzle22
 
+  describe "compress/3" do
+    test "from large repeated input" do
+      length = 119315717514047
+      iteractions = 101741582076661
+
+      # > 33835285504035
+      # < 112599538808905
+      assert 42 =
+        "test/support/puzzle22/input.txt"
+        |> from_input()
+        |> Enum.into([])
+        |> Puzzle22.compress(length, iteractions)
+    end
+  end
+
   describe "reverse/2" do
     test "undos a cut" do
       original = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
