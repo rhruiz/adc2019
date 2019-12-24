@@ -19,26 +19,12 @@ defmodule Puzzle22 do
           {a * -1, length - b - 1}
       end)
 
-    a = modpow(a, iterations, length)
-    b = b * (modpow(a, iterations, length) - 1) * Integer.mod(inversemod(a - 1, length), length)
+    res_a = modpow(a, iterations, length)
 
-    Integer.mod(Integer.mod((2020 - b), length) * inversemod(a, length), length)
-  end
+    res_b =
+      b * (modpow(a, iterations, length) - 1) * Integer.mod(inversemod(a - 1, length), length)
 
-  def reverse(:cut, [length, index, at]) do
-    rem(index + at, length)
-  end
-
-  def reverse(:deal_with_increment, [_length, 0, _increment]) do
-    0
-  end
-
-  def reverse(:deal_with_increment, [length, index, increment]) do
-    length - rem(increment * index, length)
-  end
-
-  def reverse(:deal_into_new_stack, [length, index]) do
-    length - 1 - index
+    Integer.mod(Integer.mod(2020 - res_b, length) * inversemod(res_a, length), length)
   end
 
   def deal_into_new_stack(cards), do: Enum.reverse(cards)

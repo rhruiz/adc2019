@@ -31,6 +31,7 @@ defmodule SpaceMath do
   def modpow(b, e, m), do: modpow(b, e, m, 1)
 
   def modpow(_, e, _, r) when e <= 0, do: r
+
   def modpow(b, e, m, r) do
     r =
       if Bitwise.band(e, 1) == 1 do

@@ -5,89 +5,14 @@ defmodule Puzzle22Test do
 
   describe "compress/3" do
     test "from large repeated input" do
-      length = 119315717514047
-      iteractions = 101741582076661
+      length = 119_315_717_514_047
+      iteractions = 101_741_582_076_661
 
-      # > 33835285504035
-      # < 112599538808905
-      assert 42 =
-        "test/support/puzzle22/input.txt"
-        |> from_input()
-        |> Enum.into([])
-        |> Puzzle22.compress(length, iteractions)
-    end
-  end
-
-  describe "reverse/2" do
-    test "undos a cut" do
-      original = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-      at = 3
-      transformed = cut(original, at)
-      length = length(original)
-
-      transformed
-      |> Enum.with_index()
-      |> Enum.each(fn {element, index} ->
-        original_index = reverse(:cut, [length, index, at])
-
-        assert Enum.at(original, original_index) == element
-      end)
-    end
-
-    test "undos a deal with increment" do
-      original = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-      increment = 3
-      transformed = deal_with_increment(original, increment)
-      length = length(original)
-
-      transformed
-      |> Enum.with_index()
-      |> Enum.each(fn {element, index} ->
-        original_index = reverse(:deal_with_increment, [length, index, increment])
-                         |>IO.inspect
-
-        assert Enum.at(original, original_index) == element
-      end)
-    end
-
-    test "undos a deal into new stack" do
-      original = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-      transformed = deal_into_new_stack(original)
-      length = length(original)
-
-      transformed
-      |> Enum.with_index()
-      |> Enum.each(fn {element, index} ->
-        original_index = reverse(:deal_into_new_stack, [length, index])
-
-        assert Enum.at(original, original_index) == element
-      end)
-    end
-
-    test "finds card 2020 on large input" do
-      length = 119315717514047
-      times = 1..101741582076661
-
-      transformations =
-        from_input("test/support/puzzle22/input.txt")
-        |> Stream.map(fn {mod, fun, args} ->
-          fn index ->
-            apply(mod, :reverse, [fun, [length, index | args]])
-          end
-        end)
-        |> Enum.reverse()
-
-      times
-      |> Stream.flat_map(fn _n -> transformations end)
-      |> Enum.reduce({0, 2020}, fn transformation, {counter, index} ->
-
-        if rem(counter, 10_000_000) == 0 do
-          IO.puts "#{counter}"
-          IO.puts "10174158207666100"
-        end
-
-        {counter + 1, transformation.(index)}
-      end)
+      assert 96_196_710_942_473 =
+               "test/support/puzzle22/input.txt"
+               |> from_input()
+               |> Enum.into([])
+               |> Puzzle22.compress(length, iteractions)
     end
   end
 
