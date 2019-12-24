@@ -3,8 +3,29 @@ defmodule Puzzle23 do
   Networking
   """
 
+  def first_y(switch) do
+    fn ->
+      nat = fn and_then ->
+        send(switch, {:input_requested, self()})
+
+        receive do
+          {:input, -1} ->
+            and_then.(and_then)
+
+          {:input, x} ->
+            receive do
+              {:input, y} ->
+                send(switch, {:nat_response, {x, y}})
+            end
+        end
+      end
+
+      nat.(nat)
+    end
+  end
+
   @spec boot_network(non_neg_integer()) :: none()
-  def boot_network(nhosts) do
+  def boot_network(nhosts, nat \\ &first_y/1) do
     program = Intcode.read_file("test/support/puzzle23/input.txt")
     switch = self()
 
@@ -35,19 +56,18 @@ defmodule Puzzle23 do
         }
       end)
 
-    receiver(hosts, buffer, input_buffer)
+    receiver(Map.put(hosts, spawn_link(nat.(switch)), 255), buffer, input_buffer)
   end
 
-  def receiver(_hosts, _buffer, %{255 => {[y], [_x]}}), do: y
-
   def receiver(hosts, buffer, input_buffer) do
-    IO.inspect(input_buffer[255])
-
     receive do
+      {:nat_response, response} ->
+        response
+
       {:output, host, content} ->
         {buffer, input_buffer} =
           if :queue.len(buffer[host]) == 2 do
-            [target, x, y] = :queue.to_list(buffer[host]) ++ [content]
+            {[target, x], y} = {:queue.to_list(buffer[host]), content}
 
             {
               Map.put(buffer, host, :queue.new()),
@@ -72,11 +92,9 @@ defmodule Puzzle23 do
         queue = input_buffer[id]
 
         input_buffer =
-          if :queue.len(queue) >= 2 do
+          if queue != nil && :queue.len(queue) >= 2 do
             {to_send, rest} = :queue.split(2, queue)
             [x, y] = :queue.to_list(to_send)
-
-            IO.puts("sending #{inspect {x, y}} to #{id}")
 
             IntcodeRunner.input(host, x)
             IntcodeRunner.input(host, y)
