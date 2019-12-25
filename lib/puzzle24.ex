@@ -5,8 +5,9 @@ defmodule Puzzle24 do
 
   use Bitwise
 
-  @space "."
-  @bug "#"
+  @space 0
+  @bug 1
+  @limit 5 * 5 - 1
 
   @spec read_file(Path.t()) :: map()
   def read_file(path) do
@@ -26,36 +27,26 @@ defmodule Puzzle24 do
     |> Stream.map(&String.trim/1)
     |> Stream.map(fn line -> String.split(line, "", trim: true) end)
     |> Stream.with_index()
-    |> Enum.reduce(%{}, fn {line, y}, map ->
+    |> Enum.reduce(0, fn {line, y}, map ->
       line
       |> Enum.with_index()
       |> Enum.reduce(map, fn {elem, x}, map ->
-        Map.put(map, {x, y}, elem)
+        val = if elem == "#", do: 1, else: 0
+
+        map ||| val <<< (5 * y + x)
       end)
     end)
   end
 
-  def biodiversity(map) do
-    Enum.reduce(map, 0, fn
-      {_, @space}, sum -> sum
-      {{x, y}, @bug}, sum -> sum + bsl(1, y * 5 + x)
-    end)
-  end
-
-  def dimensions(map) do
-    Enum.reduce(map, {0, 0}, fn {{x, y}, _}, {xmax, ymax} ->
-      {max(x, xmax), max(y, ymax)}
-    end)
-  end
+  def biodiversity(map), do: map
 
   def render(game) do
-    {xmax, ymax} = dimensions(game)
+    Enum.each(0..@limit, fn i ->
+      IO.write(if((game >>> i &&& 1) == 1, do: [?#], else: [?.]))
 
-    Enum.each(0..ymax, fn y ->
-      Enum.map(0..xmax, fn x ->
-        Map.get(game, {x, y})
-      end)
-      |> IO.puts()
+      if Integer.mod(i + 1, 5) == 0 do
+        IO.write([?\n])
+      end
     end)
   end
 
@@ -67,10 +58,14 @@ defmodule Puzzle24 do
   end
 
   def move(game) do
-    Enum.into(game, %{}, fn {pos, whatis} ->
-      {pos, becomes(game, whatis, pos)}
+    Enum.reduce(0..@limit, game, fn pos, new_game ->
+      becomes = becomes(game, pos)
+
+      (new_game &&& ~~~(1 <<< pos)) ||| becomes <<< pos
     end)
   end
+
+  def becomes(game, pos), do: becomes(game, at(game, pos), pos)
 
   def becomes(game, @space, pos) do
     if bugs_around(game, pos) in [1, 2] do
@@ -94,11 +89,15 @@ defmodule Puzzle24 do
     |> Enum.count(&(at(game, &1) == @bug))
   end
 
-  def at(game, {x, y}) do
-    Map.get(game, {x, y}, @space)
+  def at(game, pos) do
+    game >>> pos &&& 1
   end
 
-  defp neighbors({x, y}) do
-    [{x - 1, y}, {x + 1, y}, {x, y - 1}, {x, y + 1}]
+  def neighbors(pos) do
+    line = div(pos, 5)
+    h = Enum.filter([pos - 1, pos + 1], fn i -> i >= 0 && i <= @limit && div(i, 5) == line end)
+    v = Enum.filter([pos - 5, pos + 5], fn i -> i >= 0 && i <= @limit end)
+
+    h ++ v
   end
 end

@@ -1,7 +1,32 @@
 defmodule Puzzle24Test do
   use ExUnit.Case, async: true
 
+  import ExUnit.CaptureIO, only: [capture_io: 1]
   import Puzzle24
+
+  describe "render/1" do
+    test "with test input" do
+      content = File.read!("test/support/puzzle24/test_input_1.txt")
+
+      assert ^content =
+               capture_io(fn ->
+                 content
+                 |> read_string()
+                 |> render()
+               end)
+    end
+
+    test "with input" do
+      content = File.read!("test/support/puzzle24/input.txt")
+
+      assert ^content =
+               capture_io(fn ->
+                 content
+                 |> read_string()
+                 |> render()
+               end)
+    end
+  end
 
   describe "biodiversity/1" do
     test "star 1 requirement 1" do
