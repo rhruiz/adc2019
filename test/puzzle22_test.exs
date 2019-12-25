@@ -15,7 +15,8 @@ defmodule Puzzle22Test do
         |> Enum.into([])
         |> compress(length, iteractions)
 
-      assert 96_196_710_942_473 = Integer.mod(Integer.mod(2020 - b, length) * inversemod(a, length), length)
+      assert 96_196_710_942_473 =
+               Integer.mod(Integer.mod(2020 - b, length) * inversemod(a, length), length)
     end
 
     test "star 1 from input" do

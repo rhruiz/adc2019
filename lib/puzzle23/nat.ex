@@ -1,4 +1,8 @@
 defmodule Puzzle23.Nat do
+  @moduledoc """
+  NAT state server. Pings back when the same y has been received
+  """
+
   use GenServer
 
   @timeout 400
@@ -33,19 +37,20 @@ defmodule Puzzle23.Nat do
   end
 
   def handle_info({:input, value}, state) do
-    {pkt, tmp} = case {state.pkt, state.tmp} do
-      {nil, nil} ->
-        {nil, value}
+    {pkt, tmp} =
+      case {state.pkt, state.tmp} do
+        {nil, nil} ->
+          {nil, value}
 
-      {nil, tmp} when tmp != nil ->
-        {{tmp, value}, nil}
+        {nil, tmp} when tmp != nil ->
+          {{tmp, value}, nil}
 
-      {{x, y}, nil} ->
-        {{x, y}, value}
+        {{x, y}, nil} ->
+          {{x, y}, value}
 
-      {_curr, tmp} when tmp != nil ->
-        {{tmp, value}, nil}
-    end
+        {_curr, tmp} when tmp != nil ->
+          {{tmp, value}, nil}
+      end
 
     {:noreply, %{state | pkt: pkt, tmp: tmp}, @timeout}
   end

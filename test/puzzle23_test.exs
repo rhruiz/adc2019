@@ -14,7 +14,7 @@ defmodule Puzzle23Test do
         pid
       end
 
-      assert {_x, 16150} = boot_network(50, start_nat)
+      assert {_x, 16_150} = boot_network(50, start_nat)
     end
   end
 end

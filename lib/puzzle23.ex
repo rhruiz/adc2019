@@ -4,7 +4,7 @@ defmodule Puzzle23 do
   """
 
   def first_y(switch) do
-    spawn_link fn ->
+    spawn_link(fn ->
       receive do
         {:input, x} when x != -1 ->
           receive do
@@ -12,10 +12,10 @@ defmodule Puzzle23 do
               send(switch, {:nat_response, {x, y}})
           end
       end
-    end
+    end)
   end
 
-  @spec boot_network(non_neg_integer()) :: none()
+  @spec boot_network(non_neg_integer()) :: {integer(), integer()}
   def boot_network(nhosts, nat \\ &first_y/1) do
     program = Intcode.read_file("test/support/puzzle23/input.txt")
     switch = self()
