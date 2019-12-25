@@ -30,16 +30,12 @@ defmodule Puzzle23 do
       end
     ]
 
-    {hosts, buffer} =
-      0..(nhosts - 1)
-      |> Enum.reduce({%{}, %{}}, fn id, {hosts, buffer} ->
+    hosts =
+      Enum.into(0..(nhosts - 1), %{}, fn id ->
         pid = IntcodeRunner.start_link(program, opts)
         IntcodeRunner.input(pid, id)
 
-        {
-          Map.put(hosts, id, pid),
-          Map.put(buffer, pid, :queue.new())
-        }
+        {id, pid}
       end)
 
     nat =
@@ -48,31 +44,25 @@ defmodule Puzzle23 do
         nat when is_function(nat, 2) -> nat.(switch, hosts[0])
       end
 
-    receiver(
-      Map.put(hosts, 255, nat),
-      Map.put(buffer, nat, :queue.new())
-    )
+    receiver(Map.put(hosts, 255, nat))
   end
 
-  def receiver(hosts, buffer) do
+  def receiver(hosts) do
     receive do
       {:nat_response, response} ->
         response
 
-      {:output, host, content} ->
-        buffer =
-          if :queue.len(buffer[host]) == 2 do
-            {[target, x], y} = {:queue.to_list(buffer[host]), content}
+      {:output, host, target} ->
+        receive do
+          {:output, ^host, x} ->
+            receive do
+              {:output, ^host, y} ->
+                IntcodeRunner.input(hosts[target], x)
+                IntcodeRunner.input(hosts[target], y)
+            end
+        end
 
-            IntcodeRunner.input(hosts[target], x)
-            IntcodeRunner.input(hosts[target], y)
-
-            Map.put(buffer, host, :queue.new())
-          else
-            Map.update!(buffer, host, fn queue -> :queue.in(content, queue) end)
-          end
-
-        receiver(hosts, buffer)
+        receiver(hosts)
     end
   end
 end
