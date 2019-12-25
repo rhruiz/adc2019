@@ -43,7 +43,7 @@ defmodule Puzzle24Test do
     end
   end
 
-  describe "simulate/2" do
+  describe "move/2" do
     test "star 1 requirement 1" do
       expected =
         """
@@ -58,7 +58,7 @@ defmodule Puzzle24Test do
       assert expected ==
                "test/support/puzzle24/test_input_1.txt"
                |> read_file()
-               |> simulate(1)
+               |> move(1)
     end
 
     test "star 1 requirement 2" do
@@ -75,7 +75,7 @@ defmodule Puzzle24Test do
       assert expected ==
                "test/support/puzzle24/test_input_1.txt"
                |> read_file()
-               |> simulate(2)
+               |> move(2)
     end
 
     test "star 1 requirement 3" do
@@ -92,7 +92,7 @@ defmodule Puzzle24Test do
       assert expected ==
                "test/support/puzzle24/test_input_1.txt"
                |> read_file()
-               |> simulate(3)
+               |> move(3)
     end
 
     test "star 1 requirement 4" do
@@ -109,7 +109,7 @@ defmodule Puzzle24Test do
       assert expected ==
                "test/support/puzzle24/test_input_1.txt"
                |> read_file()
-               |> simulate(4)
+               |> move(4)
     end
   end
 
