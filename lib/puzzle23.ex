@@ -4,23 +4,14 @@ defmodule Puzzle23 do
   """
 
   def first_y(switch) do
-    fn ->
-      nat = fn and_then ->
-        send(switch, {:input_requested, self()})
-
-        receive do
-          {:input, -1} ->
-            and_then.(and_then)
-
-          {:input, x} ->
-            receive do
-              {:input, y} ->
-                send(switch, {:nat_response, {x, y}})
-            end
-        end
+    spawn_link fn ->
+      receive do
+        {:input, x} when x != -1 ->
+          receive do
+            {:input, y} when y != -1 ->
+              send(switch, {:nat_response, {x, y}})
+          end
       end
-
-      nat.(nat)
     end
   end
 
@@ -31,81 +22,57 @@ defmodule Puzzle23 do
 
     opts = [
       gets: fn _prompt ->
-        send(switch, {:input_requested, self()})
-
         receive do
           {:input, content} -> "#{content}\n"
+        after
+          0 -> "-1\n"
         end
       end
     ]
 
-    {hosts, buffer, input_buffer} =
+    {hosts, buffer} =
       0..(nhosts - 1)
-      |> Enum.reduce({%{}, %{}, %{}}, fn id, {hosts, buffer, input_buffer} ->
+      |> Enum.reduce({%{}, %{}}, fn id, {hosts, buffer} ->
         pid = IntcodeRunner.start_link(program, opts)
-
-        receive do
-          {:input_requested, ^pid} ->
-            IntcodeRunner.input(pid, id)
-        end
+        IntcodeRunner.input(pid, id)
 
         {
-          Map.put(hosts, pid, id),
-          Map.put(buffer, pid, :queue.new()),
-          Map.put(input_buffer, id, :queue.new())
+          Map.put(hosts, id, pid),
+          Map.put(buffer, pid, :queue.new())
         }
       end)
 
-    receiver(Map.put(hosts, spawn_link(nat.(switch)), 255), buffer, input_buffer)
+    nat =
+      case nat do
+        nat when is_function(nat, 1) -> nat.(switch)
+        nat when is_function(nat, 2) -> nat.(switch, hosts[0])
+      end
+
+    receiver(
+      Map.put(hosts, 255, nat),
+      Map.put(buffer, nat, :queue.new())
+    )
   end
 
-  def receiver(hosts, buffer, input_buffer) do
+  def receiver(hosts, buffer) do
     receive do
       {:nat_response, response} ->
         response
 
       {:output, host, content} ->
-        {buffer, input_buffer} =
+        buffer =
           if :queue.len(buffer[host]) == 2 do
             {[target, x], y} = {:queue.to_list(buffer[host]), content}
 
-            {
-              Map.put(buffer, host, :queue.new()),
-              input_buffer
-              |> Map.put_new_lazy(target, fn -> :queue.new() end)
-              |> Map.update!(target, fn queue ->
-                queue = :queue.in(x, queue)
-                :queue.in(y, queue)
-              end)
-            }
+            IntcodeRunner.input(hosts[target], x)
+            IntcodeRunner.input(hosts[target], y)
+
+            Map.put(buffer, host, :queue.new())
           else
-            {
-              Map.update!(buffer, host, fn queue -> :queue.in(content, queue) end),
-              input_buffer
-            }
+            Map.update!(buffer, host, fn queue -> :queue.in(content, queue) end)
           end
 
-        receiver(hosts, buffer, input_buffer)
-
-      {:input_requested, host} ->
-        id = hosts[host]
-        queue = input_buffer[id]
-
-        input_buffer =
-          if queue != nil && :queue.len(queue) >= 2 do
-            {to_send, rest} = :queue.split(2, queue)
-            [x, y] = :queue.to_list(to_send)
-
-            IntcodeRunner.input(host, x)
-            IntcodeRunner.input(host, y)
-
-            Map.put(input_buffer, id, rest)
-          else
-            IntcodeRunner.input(host, -1)
-            input_buffer
-          end
-
-        receiver(hosts, buffer, input_buffer)
+        receiver(hosts, buffer)
     end
   end
 end
