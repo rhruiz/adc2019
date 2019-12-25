@@ -43,10 +43,10 @@ defmodule Puzzle24 do
   @spec biodiversity(game()) :: integer()
   def biodiversity(map), do: map
 
-  @spec render(game()) :: none()
-  def render(game) do
+  @spec render(game(), map()) :: none()
+  def render(game, overrides \\ %{}) do
     Enum.each(0..@limit, fn i ->
-      IO.write(if((game >>> i &&& 1) == 1, do: [?#], else: [?.]))
+      IO.write(Map.get(overrides, i, if((game >>> i &&& 1) == 1, do: [?#], else: [?.])))
 
       if Integer.mod(i + 1, 5) == 0 do
         IO.write([?\n])
@@ -102,7 +102,7 @@ defmodule Puzzle24 do
   end
 
   @spec neighbors(position()) :: [position()]
-  defp neighbors(pos) do
+  def neighbors(pos) do
     line = div(pos, 5)
     h = Enum.filter([pos - 1, pos + 1], fn i -> i >= 0 && i <= @limit && div(i, 5) == line end)
     v = Enum.filter([pos - 5, pos + 5], fn i -> i >= 0 && i <= @limit end)
