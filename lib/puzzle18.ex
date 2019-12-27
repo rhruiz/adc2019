@@ -6,6 +6,7 @@ defmodule Puzzle18 do
   @all_doors ?A..?Z |> Enum.into(MapSet.new(), fn chr -> <<chr>> end)
   @all_keys ?a..?z |> Enum.into(MapSet.new(), fn chr -> <<chr>> end)
   @space "."
+  @wall "#"
   @hero "@"
 
   def read_file(path) do
@@ -39,31 +40,38 @@ defmodule Puzzle18 do
         _ -> []
       end)
 
-    visited = Enum.reduce(start_positions, MapSet.new(), fn pos, acc -> MapSet.put(acc, [{pos, MapSet.new()}]) end)
+    visited =
+      Enum.reduce(start_positions, MapSet.new(), fn pos, acc ->
+        MapSet.put(acc, [{pos, MapSet.new()}])
+      end)
 
-    queue =
-      if length(start_positions) > 1 do
+    if length(start_positions) > 1 do
+      queue =
         start_positions
         |> Enum.map(fn pos -> {pos, start_positions -- [pos], 0, MapSet.new()} end)
         |> :queue.from_list()
-      else
+
+      shortest_path(maze, :queue.out(queue), visited, all_keys, :infinity)
+
+    else
+      queue =
         start_positions
         |> Enum.map(fn pos -> {pos, 0, MapSet.new()} end)
         |> :queue.from_list()
-      end
 
-    shortest_path(maze, :queue.out(queue), visited, all_keys)
+      shortest_path(maze, :queue.out(queue), visited, all_keys)
+    end
   end
 
   defp shortest_path(_maze, {{:value, {_position, length, keys}}, _}, _, keys) do
     length
   end
 
-  defp shortest_path(_maze, {{:value, {_position, _rest, length, keys}}, _}, _, keys) do
-    length
+  defp shortest_path(_maze, {:empty, _queue}, _visited, _all_keys, min) do
+    min
   end
 
-  defp shortest_path(maze, {{:value, {position, rest, length, keys}}, queue}, visited, all_keys) do
+  defp shortest_path(maze, {{:value, {position, rest, length, keys}}, queue}, visited, all_keys, min) do
     {visited, queue} =
       maze
       |> neighbors(position)
@@ -71,7 +79,14 @@ defmodule Puzzle18 do
         visit(neighbor, Map.get(maze, neighbor), rest, keys, length, visited, queue)
       end)
 
-    shortest_path(maze, :queue.out(queue), visited, all_keys)
+    min =
+      if keys == all_keys do
+        min(min, length)
+      else
+        min
+      end
+
+    shortest_path(maze, :queue.out(queue), visited, all_keys, min)
   end
 
   defp shortest_path(maze, {{:value, {position, length, keys}}, queue}, visited, all_keys) do
@@ -150,6 +165,6 @@ defmodule Puzzle18 do
 
   def neighbors(map, {x, y}) do
     [{x + 1, y}, {x - 1, y}, {x, y + 1}, {x, y - 1}]
-    |> Enum.filter(fn position -> Map.has_key?(map, position) end)
+    |> Enum.filter(fn position -> Map.get(map, position) not in [nil, @wall] end)
   end
 end
