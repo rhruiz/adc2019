@@ -1,5 +1,5 @@
 defmodule Puzzle23Test do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
 
   import Puzzle23
 

@@ -4,6 +4,7 @@ defmodule Puzzle25Test do
   import Puzzle25
 
   describe "navigate/0" do
+    @tag timeout: :infinity
     test "finds the passcode" do
       assert navigate() =~ "typing 2147485856 on"
     end

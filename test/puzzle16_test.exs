@@ -91,7 +91,7 @@ defmodule Puzzle16Test do
                |> Integer.undigits()
     end
 
-    @tag timeout: :timer.minutes(2)
+    @tag timeout: :infinity
     test "from input" do
       assert 11_833_188 =
                "test/support/puzzle16/input.txt"

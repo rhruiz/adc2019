@@ -7,6 +7,7 @@ defmodule Puzzle12Test do
   @moons [:io, :europa, :ganymede, :callisto]
 
   describe "history repeats itself" do
+    @tag timeout: :timer.minutes(2)
     test "with input data" do
       positions =
         @moons

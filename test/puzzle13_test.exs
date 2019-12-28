@@ -11,6 +11,7 @@ defmodule Puzzle13Test do
              |> blocks()
   end
 
+  @tag timeout: :infinity
   test "enable game genie. and wall hacks. and auto aim" do
     next_move = fn
       a, a -> 0

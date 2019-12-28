@@ -13,6 +13,7 @@ defmodule Puzzle19Test do
   end
 
   describe "find_square/1" do
+    @tag timeout: :infinity
     test "finds where a 100x100 square fits" do
       assert {1308, 1049} =
                "test/support/puzzle19/input.txt"

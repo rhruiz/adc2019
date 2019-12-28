@@ -13,7 +13,7 @@ defmodule Puzzle21Test do
 
     Enum.each(assembly, fn xhr -> IntcodeRunner.input(pid, xhr) end)
 
-    assert_receive {:halted, ^pid}
+    assert_receive {:halted, ^pid}, :timer.seconds(5)
     assert_receive {:output, ^pid, 19_354_437}
   end
 
@@ -29,7 +29,7 @@ defmodule Puzzle21Test do
 
     Enum.each(assembly, fn xhr -> IntcodeRunner.input(pid, xhr) end)
 
-    assert_receive {:halted, ^pid}, :timer.seconds(5)
+    assert_receive {:halted, ^pid}, :timer.seconds(20)
     assert_receive {:output, ^pid, 1_145_373_084}
   end
 end
