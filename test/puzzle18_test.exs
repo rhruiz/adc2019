@@ -49,6 +49,7 @@ defmodule Puzzle18Test do
                    end).()
     end
 
+    @tag timeout: :infinity
     test "star 1 from input" do
       assert 4544 =
                "test/support/puzzle18/input.txt"
@@ -94,6 +95,7 @@ defmodule Puzzle18Test do
                    end).()
     end
 
+    @tag timeout: :infinity
     test "star 2 from input" do
       assert 1692 =
                "test/support/puzzle18/input_2.txt"

@@ -48,7 +48,7 @@ defmodule Puzzle18 do
     if length(start_positions) > 1 do
       queue =
         start_positions
-        |> Enum.map(fn pos -> {pos, start_positions -- [pos], 0, MapSet.new()} end)
+        |> Enum.map(fn pos -> {pos, Enum.sort(start_positions -- [pos]), 0, MapSet.new()} end)
         |> :queue.from_list()
 
       shortest_path(maze, :queue.out(queue), visited, all_keys, :infinity)
@@ -61,10 +61,6 @@ defmodule Puzzle18 do
 
       shortest_path(maze, :queue.out(queue), visited, all_keys)
     end
-  end
-
-  defp shortest_path(_maze, {{:value, {_position, length, keys}}, _}, _, keys) do
-    length
   end
 
   defp shortest_path(_maze, {:empty, _queue}, _visited, _all_keys, min) do
@@ -87,6 +83,10 @@ defmodule Puzzle18 do
       end
 
     shortest_path(maze, :queue.out(queue), visited, all_keys, min)
+  end
+
+  defp shortest_path(_maze, {{:value, {_position, length, keys}}, _}, _, keys) do
+    length
   end
 
   defp shortest_path(maze, {{:value, {position, length, keys}}, queue}, visited, all_keys) do
@@ -118,24 +118,14 @@ defmodule Puzzle18 do
     all = [position | rest]
 
     all
-    |> Enum.with_index()
-    |> Enum.reduce({visited, queue}, fn
-      {pos, 0}, {visited, queue} ->
-        if {pos, keys} not in visited do
-          {MapSet.put(visited, {pos, keys}), :queue.in({pos, rest, length + 1, keys}, queue)}
-        else
-          {visited, queue}
-        end
+    |> Enum.reduce({visited, queue}, fn pos, {visited, queue} ->
+      if {pos, keys} not in visited do
+        rest = Enum.sort(all -- [pos])
 
-      {pos, idx}, {visited, queue} ->
-        if {pos, keys} not in visited do
-          {left, [^pos | tr]} = Enum.split(rest, idx - 1)
-          rest = left ++ [position] ++ tr
-
-          {MapSet.put(visited, {pos, keys}), :queue.in({pos, rest, length + 1, keys}, queue)}
-        else
-          {visited, queue}
-        end
+        {MapSet.put(visited, {pos, keys}), :queue.in({pos, rest, length + 1, keys}, queue)}
+      else
+        {visited, queue}
+      end
     end)
   end
 
