@@ -3,66 +3,85 @@ defmodule Puzzle23 do
   Networking
   """
 
-  def first_y(switch) do
-    spawn_link(fn ->
-      receive do
-        {:input, x} when x != -1 ->
-          receive do
-            {:input, y} when y != -1 ->
-              send(switch, {:nat_response, {x, y}})
-          end
-      end
-    end)
-  end
+  alias Puzzle23.Nat
+  alias Puzzle23.Node
 
-  @spec boot_network(non_neg_integer()) :: {integer(), integer()}
-  def boot_network(nhosts, nat \\ &first_y/1) do
+  def boot_network(nhosts) do
     program = Intcode.read_file("test/support/puzzle23/input.txt")
-    switch = self()
-
-    opts = [
-      gets: fn _prompt ->
-        receive do
-          {:input, content} -> "#{content}\n"
-        after
-          0 -> "-1\n"
-        end
-      end
-    ]
 
     hosts =
       Enum.into(0..(nhosts - 1), %{}, fn id ->
-        pid = IntcodeRunner.start_link(program, opts)
-        IntcodeRunner.input(pid, id)
-
+        {:ok, pid} = Node.start_link(id, program)
         {id, pid}
       end)
 
-    nat =
-      case nat do
-        nat when is_function(nat, 1) -> nat.(switch)
-        nat when is_function(nat, 2) -> nat.(switch, hosts[0])
-      end
-
-    receiver(Map.put(hosts, 255, nat))
+    first_y_loop(hosts)
   end
 
-  def receiver(hosts) do
-    receive do
-      {:nat_response, response} ->
-        response
+  def first_y_loop(hosts) do
+    Enum.find_value(hosts, fn {_id, host} ->
+      case Node.output(host) do
+        {255, x, y} ->
+          {x, y}
 
-      {:output, host, target} ->
-        receive do
-          {:output, ^host, x} ->
-            receive do
-              {:output, ^host, y} ->
-                IntcodeRunner.input(hosts[target], x)
-                IntcodeRunner.input(hosts[target], y)
-            end
+        {target, x, y} ->
+          Node.packet(hosts[target], x, y)
+          nil
+
+        _ ->
+          nil
+      end
+    end)
+    |> (fn
+      {x, y} -> {x, y}
+      _ -> first_y_loop(hosts)
+    end).()
+  end
+
+  @spec boot_network(non_neg_integer()) :: {integer(), integer()}
+  def boot_network(nhosts, nat) do
+    program = Intcode.read_file("test/support/puzzle23/input.txt")
+    switch = self()
+
+    hosts =
+      Enum.into(0..(nhosts - 1), %{}, fn id ->
+        {:ok, pid} = Node.start_link(id, program)
+        {id, pid}
+      end)
+
+    nat = nat.(switch, hosts[0])
+    loop(hosts, nat)
+  end
+
+  def loop(hosts, nat) do
+    Process.sleep(1)
+
+    Enum.reduce(hosts, 0, fn
+      {_id, host}, waiting_input ->
+        case Node.output(host) do
+          {255, x, y} ->
+            Nat.packet(nat, x, y)
+            waiting_input
+
+          {target, x, y} ->
+            Node.packet(hosts[target], x, y)
+            waiting_input
+
+          _ ->
+            waiting_input + 1
         end
+    end)
+    |> (fn
+      50 ->
+        nat
+        |> Nat.network_is_idle()
+        |> (fn
+          :ok -> loop(hosts, nat)
+          {:nat_response, pkt} -> pkt
+        end).()
 
-        receiver(hosts)
-    end
+      _ ->
+        loop(hosts, nat)
+    end).()
   end
 end

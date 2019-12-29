@@ -5,43 +5,38 @@ defmodule Puzzle23.Nat do
 
   use GenServer
 
-  @timeout 100
+  alias Puzzle23.Node
 
   def start_link(switch, host0) do
     GenServer.start_link(__MODULE__, [switch, host0])
   end
 
   def init([switch, host0]) do
-    {:ok, %{host0: host0, switch: switch, pkt: nil, tmp: nil, last: nil}}
+    {:ok, %{host0: host0, switch: switch, pkt: nil, last: nil}}
   end
 
-  def handle_info(:timeout, %{last: {x, y}, switch: switch, pkt: {x, y}} = state) do
-    send(switch, {:nat_response, {x, y}})
-
-    {:stop, :normal, state}
+  def network_is_idle(nat) do
+    GenServer.call(nat, :network_is_idle)
   end
 
-  def handle_info(:timeout, %{tmp: tmp} = state) when tmp != nil do
-    {:noreply, state, @timeout}
+  def packet(nat, x, y) do
+    GenServer.call(nat, {:packet, {x, y}})
   end
 
-  def handle_info(:timeout, %{pkt: {x, y}} = state) do
-    IntcodeRunner.input(state.host0, x)
-    IntcodeRunner.input(state.host0, y)
-
-    {:noreply, %{state | last: {x, y}}, @timeout}
+  def handle_call({:packet, pkt}, _from, state) do
+    {:reply, :ok, %{state | pkt: pkt}}
   end
 
-  def handle_info({:input, value}, state) do
-    {pkt, tmp} =
-      case {state.pkt, state.tmp} do
-        {curr, nil} ->
-          {curr, value}
+  def handle_call(:network_is_idle, _from, %{pkt: nil} = state) do
+    {:reply, :ok, state}
+  end
 
-        {_curr, tmp} when tmp != nil ->
-          {{tmp, value}, nil}
-      end
+  def handle_call(:network_is_idle, _from, %{pkt: pkt, last: pkt} = state) do
+    {:reply, {:nat_response, pkt}, state}
+  end
 
-    {:noreply, %{state | pkt: pkt, tmp: tmp}, @timeout}
+  def handle_call(:network_is_idle, _from, %{host0: host0, pkt: {x, y}} = state) do
+    Node.packet(host0, x, y)
+    {:reply, :ok, %{state | last: {x, y}}}
   end
 end
